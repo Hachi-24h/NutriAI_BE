@@ -1,0 +1,38 @@
+# =========================
+# Node.js dependencies
+# =========================
+**/node_modules/
+
+# =========================
+# Environment files
+# (mỗi service có .env riêng)
+# =========================
+**/.env
+
+# =========================
+# Build outputs
+# =========================
+dist/
+build/
+
+# =========================
+# Logs & debug
+# =========================
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# System files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Optional caches
+# =========================
+.cache/
+.tmp/
+coverage/
