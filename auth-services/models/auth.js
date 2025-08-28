@@ -1,29 +1,13 @@
-// models/auth.js
 const mongoose = require('mongoose');
 
-const UserDetailSchema = new mongoose.Schema(
-  {
-    fullname: { type: String, required: true },
-    gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'], default: 'OTHER' },
-    DOB: { type: Date },
-    height: String,
-    weight: String,
-    BMI: String,
-    activityLevel: Number
-  },
-  { _id: false } // nhúng trực tiếp vào Auth
-);
+const AuthSchema = new mongoose.Schema({
+  phone: { type: String, unique: true, sparse: true }, // cho local (tuỳ bạn dùng phone hoặc email)
+  email: { type: String, unique: true, sparse: true }, // local hoặc google
+  passwordHash: { type: String },                      // chỉ có nếu provider = 'local'
+  provider: { type: String, enum: ['local', 'google'], default: 'local' },
+  providerId: { type: String },                        // Google sub (id duy nhất từ Google)
+  role: { type: String, default: 'user' },
 
-const AuthSchema = new mongoose.Schema(
-  {
-    phone: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    passwordHash: { type: String, required: true, select: false }, // hash bcrypt
-    googledId: String,
-    role: { type: String, enum: ['USER', 'ADMIN'], default: 'USER' },
-    userDetail: { type: UserDetailSchema, required: true }
-  },
-  { timestamps: true, collection: 'auths' }
-);
+}, { timestamps: true });
 
 module.exports = mongoose.model('Auth', AuthSchema);
