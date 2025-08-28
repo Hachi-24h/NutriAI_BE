@@ -1,19 +1,19 @@
-// middlewares/authMiddleware.js
+// middlewares/requireAuth.js
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'access-secret';
 
-module.exports = (req, res, next) => {
-  const header = req.headers['authorization'];
-  if (!header) return res.status(401).json({ message: 'Missing Authorization header' });
-
-  const token = header.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Invalid Authorization header' });
-
+module.exports = function requireAuth(req, res, next) {
+  const auth = req.headers.authorization || '';
+  const [scheme, token] = auth.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return res.status(401).json({ message: 'Missing or invalid Authorization header' });
+  }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    const payload = jwt.verify(token, JWT_ACCESS_SECRET, { issuer: 'auth-service' });
+    // payload.sub = _id của Auth (bên auth service)
+    req.auth = { id: payload.sub, role: payload.role, email: payload.email, phone: payload.phone };
     next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (e) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

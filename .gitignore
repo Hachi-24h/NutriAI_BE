@@ -7,7 +7,7 @@
 # Environment files
 # (mỗi service có .env riêng)
 # =========================
-**/.env
+
 
 # =========================
 # Build outputs
