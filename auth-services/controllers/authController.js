@@ -82,31 +82,42 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { phoneOrEmail, password } = req.body || {};
-    if (!phoneOrEmail || !password) return res.status(400).json({ message: "Missing fields" });
+    if (!phoneOrEmail || !password) 
+      return res.status(400).json({ message: "Missing fields" });
 
     const query = phoneOrEmail.includes("@")
       ? { email: phoneOrEmail.toLowerCase() }
       : { phone: phoneOrEmail };
+
     const auth = await Auth.findOne(query);
-    if (!auth) return res.status(401).json({ message: "Invalid credentials" });
+
+    if (!auth) {
+      // ⚠️ Trường hợp chưa đăng ký
+      return res.status(404).json({ message: "Account not found" });
+    }
 
     const ok = await bcrypt.compare(password, auth.passwordHash || "");
-    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    if (!ok) {
+      // ⚠️ Trường hợp mật khẩu sai
+      return res.status(401).json({ message: "Incorrect password" });
+    }
 
+    // Đăng nhập thành công
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
 
-    res.json({
+    return res.json({
       access_token,
       refresh_token,
       token_type: "Bearer",
       expires_in: 900
     });
   } catch (err) {
-    res.status(500).json({ message: "Login failed", error: err.message });
+    return res.status(500).json({ message: "Login failed", error: err.message });
   }
 };
+
 
 
 
@@ -250,5 +261,33 @@ exports.getMe = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
+  }
+};
+
+
+// change password by phone
+exports.resetPasswordByPhone = async (req, res) => {
+  try {
+    const { phone, newPassword } = req.body || {};
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!phone || !newPassword) {
+      return res.status(400).json({ message: "Missing phone or new password" });
+    }
+
+    // Tìm user theo số điện thoại
+    const auth = await Auth.findOne({ phone });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    // Hash mật khẩu mới
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    auth.passwordHash = passwordHash;
+    await auth.save();
+
+    return res.json({ message: "Password has been reset successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Reset password failed", error: err.message });
   }
 };
