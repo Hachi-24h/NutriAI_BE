@@ -23,7 +23,7 @@ exports.getMe = async (req, res) => {
 // Tạo user mới
 exports.createUser = async (req, res) => {
   try {
-    const { fullname, gender, DOB, height, weight } = req.body || {};
+    const { fullname, gender, DOB, height, weight, avt } = req.body || {};
     if (!fullname || !gender || !DOB) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -38,7 +38,8 @@ exports.createUser = async (req, res) => {
       gender,
       DOB,
       height,
-      weight
+      weight,
+      avt // 👈 thêm avatar vào create
     });
     res.status(201).json(user);
   } catch (err) {
@@ -65,5 +66,55 @@ exports.deleteUser = async (req, res) => {
     res.json({ message: "User deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+// Cập nhật thông tin user
+exports.updateUser = async (req, res) => {
+  try {
+    const authId = req.auth.id; // lấy từ token
+    const { fullname, DOB, gender, height, weight, avt } = req.body;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { authId },
+      { fullname, DOB, gender, height, weight, avt },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ message: "Update user failed", error: err.message });
+  }
+};
+
+// Cập nhật avatar user (PATCH)
+exports.updateAvatar = async (req, res) => {
+  try {
+    const authId = req.auth.id; // lấy từ token
+    const { avt } = req.body;
+
+    if (!avt || typeof avt !== "string") {
+      return res.status(400).json({ message: "Avatar link is required" });
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { authId },
+      { $set: { avt } }, // chỉ update field avt
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Avatar updated successfully",
+      user: updatedUser
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Update avatar failed", error: err.message });
   }
 };
