@@ -10,6 +10,7 @@ router.post("/refresh", authCtrl.refresh);
 router.post("/logout", authCtrl.logout);
 router.post("/change-password", authCtrl.resetPasswordByPhone);
 router.post("/send-otp", authCtrl.sendOTP);
+router.get("/all", authCtrl.getAll);
 
 router.get("/me", requireAuth, authCtrl.getMe);
 module.exports = router;
