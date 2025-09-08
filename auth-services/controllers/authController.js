@@ -121,8 +121,7 @@ exports.login = async (req, res) => {
 
 
 
-// ====== Đăng nhập Google ======
-// controllers/authController.js
+
 // === Đăng nhập/đăng ký Google (1 endpoint) ===
 exports.loginWithGoogle = async (req, res) => {
   try {
@@ -292,13 +291,16 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
+exports.getAll = async (req, res) => {
+  try {
+    const auth = await Auth.find();  // lấy toàn bộ collection User
+    res.json(auth);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 
-
-const textflow = require("textflow.js");
-
-// set API key
-textflow.useKey("AKZHinTGMLMECzbDWk8x1XH9MoGzX4BVtknxEs4ukCZNFoIfP1uffNS46XA9FWSx");
 
 // Gửi OTP
 exports.sendOTP = async (req, res) => {
