@@ -14,7 +14,7 @@ const axios = require('axios');
 
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
-
+const otpStore = {};
 async function ensureUserProfile(authId, initialProfile = {}) {
   if (!USER_SERVICE_BASE_URL) return; // dev chưa set env thì bỏ qua
   try {
@@ -82,31 +82,42 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { phoneOrEmail, password } = req.body || {};
-    if (!phoneOrEmail || !password) return res.status(400).json({ message: "Missing fields" });
+    if (!phoneOrEmail || !password)
+      return res.status(400).json({ message: "Missing fields" });
 
     const query = phoneOrEmail.includes("@")
       ? { email: phoneOrEmail.toLowerCase() }
       : { phone: phoneOrEmail };
+
     const auth = await Auth.findOne(query);
-    if (!auth) return res.status(401).json({ message: "Invalid credentials" });
+
+    if (!auth) {
+      // ⚠️ Trường hợp chưa đăng ký
+      return res.status(404).json({ message: "Account not found" });
+    }
 
     const ok = await bcrypt.compare(password, auth.passwordHash || "");
-    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    if (!ok) {
+      // ⚠️ Trường hợp mật khẩu sai
+      return res.status(401).json({ message: "Incorrect password" });
+    }
 
+    // Đăng nhập thành công
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
 
-    res.json({
+    return res.json({
       access_token,
       refresh_token,
       token_type: "Bearer",
       expires_in: 900
     });
   } catch (err) {
-    res.status(500).json({ message: "Login failed", error: err.message });
+    return res.status(500).json({ message: "Login failed", error: err.message });
   }
 };
+
 
 
 
@@ -250,5 +261,79 @@ exports.getMe = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
+  }
+};
+
+
+// change password by phone
+exports.resetPasswordByPhone = async (req, res) => {
+  try {
+    const { phone, newPassword } = req.body || {};
+
+    // Kiểm tra dữ liệu đầu vào
+    if (!phone || !newPassword) {
+      return res.status(400).json({ message: "Missing phone or new password" });
+    }
+
+    // Tìm user theo số điện thoại
+    const auth = await Auth.findOne({ phone });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    // Hash mật khẩu mới
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    auth.passwordHash = passwordHash;
+    await auth.save();
+
+    return res.json({ message: "Password has been reset successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Reset password failed", error: err.message });
+  }
+};
+
+
+
+
+const textflow = require("textflow.js");
+
+// set API key
+textflow.useKey("AKZHinTGMLMECzbDWk8x1XH9MoGzX4BVtknxEs4ukCZNFoIfP1uffNS46XA9FWSx");
+
+// Gửi OTP
+exports.sendOTP = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: "Missing phone" });
+
+    // Gửi OTP (TextFlow sẽ tự sinh mã và gửi SMS)
+    await textflow.sendVerificationSMS(phone, {
+      service_name: "My App",  // tên dịch vụ hiển thị trong SMS
+      seconds: 300             // thời hạn mã OTP (5 phút)
+    });
+
+    res.json({ success: true, message: "OTP sent via TextFlow" });
+  } catch (err) {
+    console.error("sendOTP error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Xác minh OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    if (!phone || !code) return res.status(400).json({ message: "Missing phone/code" });
+
+    const result = await textflow.verifyCode(phone, code);
+
+    if (result.valid) {
+      res.json({ success: true, message: "OTP verified" });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+  } catch (err) {
+    console.error("verifyOTP error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
 };

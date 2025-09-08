@@ -8,7 +8,8 @@ const UserSchema = new mongoose.Schema({
   height: { type: String },
   weight: { type: String },
   BMI: { type: String },
-  activityLevel: { type: Number }
+  activityLevel: { type: Number },
+  avt: { type: String } // 👈 thêm trường avatar
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", UserSchema);
