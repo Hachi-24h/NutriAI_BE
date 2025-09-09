@@ -149,8 +149,6 @@ exports.updateAvatar = async (req, res) => {
 };
 
 
-
-
 // Upload avatar và lưu link vào DB
 exports.uploadAvatar = async (req, res) => {
   try {
@@ -177,5 +175,47 @@ exports.uploadAvatar = async (req, res) => {
     stream.end(req.file.buffer);
   } catch (err) {
     res.status(500).json({ message: "Upload failed", error: err.message });
+  }
+};
+
+
+// Upload avatar và update DB
+exports.uploadAndUpdateAvatar = async (req, res) => {
+  try {
+    const authId = req.auth.id; // lấy từ token
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload file buffer lên Cloudinary bằng stream
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "uploads" },
+      async (error, result) => {
+        if (error) {
+          return res.status(500).json({ message: "Upload failed", error });
+        }
+
+        // Update field avt trong DB bằng link mới
+        const updatedUser = await User.findOneAndUpdate(
+          { authId },
+          { $set: { avt: result.secure_url } },
+          { new: true }
+        );
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+          message: "Avatar uploaded and updated successfully",
+          user: updatedUser
+        });
+      }
+    );
+
+    stream.end(req.file.buffer);
+  } catch (err) {
+    res.status(500).json({ message: "Upload and update avatar failed", error: err.message });
   }
 };
