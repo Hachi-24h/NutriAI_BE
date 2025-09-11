@@ -292,14 +292,6 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
-
-
-
-const textflow = require("textflow.js");
-
-// set API key
-textflow.useKey("AKZHinTGMLMECzbDWk8x1XH9MoGzX4BVtknxEs4ukCZNFoIfP1uffNS46XA9FWSx");
-
 // Gửi OTP
 exports.sendOTP = async (req, res) => {
   try {
