@@ -121,8 +121,7 @@ exports.login = async (req, res) => {
 
 
 
-// ====== Đăng nhập Google ======
-// controllers/authController.js
+
 // === Đăng nhập/đăng ký Google (1 endpoint) ===
 exports.loginWithGoogle = async (req, res) => {
   try {
@@ -292,12 +291,21 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
+
+
+
+const textflow = require("textflow.js");
+
+// set API key
+textflow.useKey("AKZHinTGMLMECzbDWk8x1XH9MoGzX4BVtknxEs4ukCZNFoIfP1uffNS46XA9FWSx");
+
 // Gửi OTP
 exports.sendOTP = async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ message: "Missing phone" });
 
+    console.log("Sending OTP to:", phone);
     // Gửi OTP (TextFlow sẽ tự sinh mã và gửi SMS)
     await textflow.sendVerificationSMS(phone, {
       service_name: "My App",  // tên dịch vụ hiển thị trong SMS

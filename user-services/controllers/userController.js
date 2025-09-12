@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const cloudinary = require("../config/cloudinary");
 
 // Lấy danh sách user
 exports.getUsers = async (req, res) => {
@@ -68,15 +69,16 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-// Cập nhật thông tin user
-exports.updateUser = async (req, res) => {
+
+// Cập nhật thông tin user (PUT)
+exports.updateUserInfo = async (req, res) => {
   try {
     const authId = req.auth.id; // lấy từ token
-    const { fullname, DOB, gender, height, weight, avt } = req.body;
+    const { fullname, DOB, gender } = req.body;
 
     const updatedUser = await User.findOneAndUpdate(
       { authId },
-      { fullname, DOB, gender, height, weight, avt },
+      { fullname, DOB, gender },
       { new: true, runValidators: true }
     );
 
@@ -86,9 +88,36 @@ exports.updateUser = async (req, res) => {
 
     res.json(updatedUser);
   } catch (err) {
-    res.status(500).json({ message: "Update user failed", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Update user info failed", error: err.message });
   }
 };
+
+// Cập nhật sức khoẻ (chiều cao, cân nặng)
+exports.updateUserHealth = async (req, res) => {
+  try {
+    const authId = req.auth.id; // lấy từ token
+    const { height, weight } = req.body;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { authId },
+      { height, weight },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Update user health failed", error: err.message });
+  }
+};
+
 
 // Cập nhật avatar user (PATCH)
 exports.updateAvatar = async (req, res) => {
@@ -116,5 +145,77 @@ exports.updateAvatar = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Update avatar failed", error: err.message });
+  }
+};
+
+
+// Upload avatar và lưu link vào DB
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload file buffer lên Cloudinary bằng stream
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "uploads" }, // lưu file vào folder "uploads"
+      (error, result) => {
+        if (error) {
+          return res.status(500).json({ message: "Upload failed", error });
+        }
+
+        // Chỉ trả về link ảnh, không động đến DB
+        res.json({
+          message: "File uploaded successfully",
+          url: result.secure_url,
+        });
+      }
+    );
+
+    stream.end(req.file.buffer);
+  } catch (err) {
+    res.status(500).json({ message: "Upload failed", error: err.message });
+  }
+};
+
+
+// Upload avatar và update DB
+exports.uploadAndUpdateAvatar = async (req, res) => {
+  try {
+    const authId = req.auth.id; // lấy từ token
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload file buffer lên Cloudinary bằng stream
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "uploads" },
+      async (error, result) => {
+        if (error) {
+          return res.status(500).json({ message: "Upload failed", error });
+        }
+
+        // Update field avt trong DB bằng link mới
+        const updatedUser = await User.findOneAndUpdate(
+          { authId },
+          { $set: { avt: result.secure_url } },
+          { new: true }
+        );
+
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+          message: "Avatar uploaded and updated successfully",
+          user: updatedUser
+        });
+      }
+    );
+
+    stream.end(req.file.buffer);
+  } catch (err) {
+    res.status(500).json({ message: "Upload and update avatar failed", error: err.message });
   }
 };
