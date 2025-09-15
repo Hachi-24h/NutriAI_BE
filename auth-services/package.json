@@ -20,6 +20,7 @@
     "google-auth-library": "^10.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
+    "nodemailer": "^7.0.6",
     "textflow.js": "^0.1.4",
     "twilio": "^5.9.0"
   }

@@ -15,6 +15,12 @@ const axios = require('axios');
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 const otpStore = {};
+const nodemailer = require("nodemailer");
+const emailChangeCodes = {}; // { oldEmail: { code, newEmail } }
+
+// lưu mã tạm thời trong memory (có thể thay bằng Redis)
+const emailVerificationCodes = {};
+
 async function ensureUserProfile(authId, initialProfile = {}) {
   if (!USER_SERVICE_BASE_URL) return; // dev chưa set env thì bỏ qua
   try {
@@ -249,20 +255,23 @@ exports.logout = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const auth = req.auth;
-    if (!auth) return res.status(401).json({ message: "Unauthorized" });
+    if (!req.auth) return res.status(401).json({ message: "Unauthorized" });
+
+    // luôn query DB để lấy dữ liệu mới nhất
+    const auth = await Auth.findById(req.auth.id).lean();
+    if (!auth) return res.status(404).json({ message: "User not found" });
 
     return res.json({
-      id: auth.id,   // 👈 đổi từ _id sang id
+      id: auth._id,
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
+      emailVerified: auth.emailVerified || false,  // ✅ luôn có
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
   }
 };
-
 
 // change password by phone
 exports.resetPasswordByPhone = async (req, res) => {
@@ -291,16 +300,13 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
-exports.getAll = async (req, res) => {
-  try {
-    const auth = await Auth.find();  // lấy toàn bộ collection User
-    res.json(auth);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
 
 
+
+const textflow = require("textflow.js");
+
+// set API key
+textflow.useKey("AKZHinTGMLMECzbDWk8x1XH9MoGzX4BVtknxEs4ukCZNFoIfP1uffNS46XA9FWSx");
 
 // Gửi OTP
 exports.sendOTP = async (req, res) => {
@@ -308,6 +314,7 @@ exports.sendOTP = async (req, res) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ message: "Missing phone" });
 
+    console.log("Sending OTP to:", phone);
     // Gửi OTP (TextFlow sẽ tự sinh mã và gửi SMS)
     await textflow.sendVerificationSMS(phone, {
       service_name: "My App",  // tên dịch vụ hiển thị trong SMS
@@ -336,6 +343,144 @@ exports.verifyOTP = async (req, res) => {
     }
   } catch (err) {
     console.error("verifyOTP error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// gửi mã xác thực về email
+exports.sendEmailVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Missing email" });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    emailVerificationCodes[email] = code;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER, // Gmail
+        pass: process.env.SMTP_PASS, // App password Gmail
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Verify your email",
+      text: `Your verification code is: ${code}`,
+      html: `<h2>Email Verification</h2>
+             <p>Your code is <b>${code}</b></p>`,
+    });
+
+    res.json({ success: true, message: "Verification code sent to email" });
+  } catch (err) {
+    console.error("sendEmailVerification error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// xác minh mã
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ message: "Missing email/code" });
+
+    if (emailVerificationCodes[email] && emailVerificationCodes[email] === code) {
+      // Xoá mã sau khi dùng
+      delete emailVerificationCodes[email];
+
+      // update DB
+      await Auth.updateOne({ email }, { $set: { emailVerified: true } });
+
+      return res.json({ success: true, message: "Email verified successfully" });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid code" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// gửi OTP xác nhận đổi email
+exports.changeEmail = async (req, res) => {
+  try {
+    const { oldEmail, newEmail } = req.body;
+    if (!oldEmail || !newEmail) return res.status(400).json({ message: "Missing old/new email" });
+
+    // kiểm tra email mới đã tồn tại chưa
+    const existed = await Auth.findOne({ email: newEmail });
+    if (existed) return res.status(409).json({ message: "New email already in use" });
+
+    // tạo mã OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    emailChangeCodes[oldEmail] = { code, newEmail };
+
+    // gửi OTP về email cũ
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: oldEmail,
+      subject: "Confirm your email change",
+      text: `Your code to change email is: ${code}`,
+      html: `<p>Your code to change email is <b>${code}</b></p>`,
+    });
+
+    res.json({ success: true, message: "Verification code sent to current email" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.confirmEmailChange = async (req, res) => {
+  try {
+    const { oldEmail, code } = req.body;
+    if (!oldEmail || !code) return res.status(400).json({ message: "Missing fields" });
+
+    const record = emailChangeCodes[oldEmail];
+    if (!record || record.code !== code) {
+      return res.status(400).json({ message: "Invalid code" });
+    }
+
+    // cập nhật email mới
+    const auth = await Auth.findOneAndUpdate(
+      { email: oldEmail },
+      { $set: { email: record.newEmail, emailVerified: false } },
+      { new: true }
+    );
+
+    delete emailChangeCodes[oldEmail];
+
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    // gửi OTP verify đến email mới
+    const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+    emailVerificationCodes[auth.email] = verifyCode;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: auth.email,
+      subject: "Verify your new email",
+      text: `Your verification code is: ${verifyCode}`,
+    });
+
+    res.json({ success: true, message: "Email updated. Please verify new email." });
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
