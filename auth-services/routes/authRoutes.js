@@ -14,6 +14,12 @@ router.post("/change-password", authCtrl.resetPasswordByPhone);
 router.post("/send-otp", authCtrl.sendOTP);
 router.post("/verify-otp", authCtrl.verifyOTP); // 👈 thêm verify
 
+router.post("/send-email-verification", authCtrl.sendEmailVerification);
+router.post("/verify-email", authCtrl.verifyEmail);
+
+router.post("/request-email-change", authCtrl.changeEmail);
+router.post("/confirm-email-change", authCtrl.confirmEmailChange);
+
 router.get("/me", requireAuth, authCtrl.getMe);
 
 module.exports = router;
