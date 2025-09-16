@@ -137,41 +137,46 @@ exports.loginWithGoogle = async (req, res) => {
     const { id_token } = req.body || {};
     if (!id_token) return res.status(400).json({ message: 'Missing id_token' });
 
-    // 1) verify với Google
+    // 1) Verify token với Google
     const ticket = await googleClient.verifyIdToken({
       idToken: id_token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-    const p = ticket.getPayload(); // { sub, email, name, picture, given_name, family_name, ... }
+    const { sub, email, name, picture, given_name, family_name } = ticket.getPayload();
 
+    // 2) Tìm user trong DB
     let auth = await Auth.findOne({
-      providers: { $elemMatch: { type: 'google', providerId: p.sub } }
+      providers: { $elemMatch: { type: 'google', providerId: sub } }
     });
-    auth = await Auth.findOne({ email });
+
+    if (!auth && email) {
+      auth = await Auth.findOne({ email: email.toLowerCase() });
+    }
+
     if (auth) {
       if (!auth.providers.some(p => p.type === 'google')) {
-        auth.providers.push({ type: 'google', providerId: p.sub });
+        auth.providers.push({ type: 'google', providerId: sub });
         await auth.save();
       }
     } else {
       auth = await Auth.create({
         email,
-        providers: [{ type: 'google', providerId: p.sub }]
+        providers: [{ type: 'google', providerId: sub }]
       });
     }
 
-    // 3) phát token
+    // 3) Sinh token
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
 
-    // 4) đảm bảo có User (dùng info Google, gán mặc định phần thiếu)
+    // 4) Đảm bảo có user profile
     await ensureUserProfile(auth._id.toString(), {
-      fullname: p.name || `${p.given_name || ''} ${p.family_name || ''}`.trim() || 'Google User',
+      fullname: name || `${given_name || ''} ${family_name || ''}`.trim() || 'Google User',
       gender: 'OTHER',
       DOB: null,
-      email: p.email || null,
-      avatar: p.picture || null,
+      email: email || null,
+      avatar: picture || null,
     });
 
     return res.json({
