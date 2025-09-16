@@ -9,21 +9,25 @@ router.post("/google", authCtrl.loginWithGoogle);
 router.post("/refresh", authCtrl.refresh);
 router.post("/logout", authCtrl.logout);
 router.post("/change-password", authCtrl.resetPasswordByPhone);
-router.post("/change-password-email", authCtrl.resetPasswordByEmail);
+router.post("/check-availability", authCtrl.checkAvailability);
+router.get("/all", authCtrl.getAll);
+router.post("/login-fingerprint", authCtrl.loginWithFingerprint);
+router.post("/check-credentials", authCtrl.checkCredentials);
+router.post("/link-google", requireAuth, authCtrl.linkGoogle);
+router.post("/link-phone", requireAuth, authCtrl.linkPhone);
+// router.post("/change-password-email", authCtrl.resetPasswordByEmail);
 
-// OTP
-router.post("/send-otp", authCtrl.sendOTP);
-router.post("/verify-otp", authCtrl.verifyOTP); // 👈 thêm verify
 
-router.post("/send-email-verification", authCtrl.sendEmailVerification);
-router.post("/verify-email", authCtrl.verifyEmail);
 
-router.post("/request-email-change", authCtrl.changeEmail);
-router.post("/confirm-email-change", authCtrl.confirmEmailChange);
+// router.post("/send-email-verification", authCtrl.sendEmailVerification);
+// router.post("/verify-email", authCtrl.verifyEmail);
 
-// check phone/email exist
-router.post("/check-phone", authCtrl.checkPhone);
-router.post("/check-email", authCtrl.checkEmail);
+// router.post("/request-email-change", authCtrl.changeEmail);
+// router.post("/confirm-email-change", authCtrl.confirmEmailChange);
+
+// // check phone/email exist
+// router.post("/check-phone", authCtrl.checkPhone);
+// router.post("/check-email", authCtrl.checkEmail);
 
 router.get("/me", requireAuth, authCtrl.getMe);
 
