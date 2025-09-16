@@ -142,6 +142,7 @@ exports.loginWithGoogle = async (req, res) => {
       idToken: id_token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
+    // console.log("Google ticket:", ticket);
     const { sub, email, name, picture, given_name, family_name } = ticket.getPayload();
 
     // 2) Tìm user trong DB
@@ -405,3 +406,74 @@ exports.checkCredentials = async (req, res) => {
   }
 };
 
+exports.linkGoogle = async (req, res) => {
+  try {
+    const { id_token } = req.body || {};
+    if (!id_token) return res.status(400).json({ message: "Missing id_token" });
+
+    // 1. Verify token với Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    console.log("Google ticket:", ticket);
+    const { sub, email } = ticket.getPayload();
+
+    // 2. Lấy user hiện tại từ token access
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    // 3. Kiểm tra nếu đã link Google rồi
+    const alreadyLinked = auth.providers.some(p => p.type === "google");
+    if (alreadyLinked) {
+      return res.status(400).json({ message: "Google account already linked" });
+    }
+
+    // 4. Thêm provider mới
+    auth.providers.push({ type: "google", providerId: sub });
+    await auth.save();
+
+    return res.json({ message: "Google account linked successfully" });
+  } catch (err) {
+    console.error("Link Google error:", err.message);
+    return res.status(500).json({ message: "Link Google failed", error: err.message });
+  }
+};
+
+exports.linkPhone = async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+      return res.status(400).json({ message: "Missing phone or password" });
+    }
+
+    // 1. Check phone đã tồn tại ở user khác chưa
+    const existing = await Auth.findOne({ phone });
+    if (existing) {
+      return res.status(400).json({ message: "Phone number already in use" });
+    }
+
+    // 2. Lấy user hiện tại từ access token
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    // 3. Kiểm tra đã có local provider chưa
+    const hasLocal = auth.providers.some(p => p.type === "local");
+    if (hasLocal) {
+      return res.status(400).json({ message: "Local account already linked" });
+    }
+
+    // 4. Hash password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // 5. Cập nhật user: thêm phone + provider local
+    auth.phone = phone;
+    auth.providers.push({ type: "local", passwordHash });
+    await auth.save();
+
+    return res.json({ message: "Local account linked successfully" });
+  } catch (err) {
+    console.error("Link Local error:", err.message);
+    return res.status(500).json({ message: "Link Local failed", error: err.message });
+  }
+};
