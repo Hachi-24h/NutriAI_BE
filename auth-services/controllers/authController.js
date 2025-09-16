@@ -60,8 +60,13 @@ exports.register = async (req, res) => {
     const existed = await Auth.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
     if (existed) return res.status(409).json({ message: "Phone/Email already exists" });
 
+
     const passwordHash = await bcrypt.hash(password, 12);
-    const auth = await Auth.create({ phone, email, passwordHash, provider: "local" });
+    const auth = await Auth.create({
+      phone,
+      email,
+      providers: [{ type: 'local', passwordHash }]
+    });
 
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
@@ -96,7 +101,11 @@ exports.login = async (req, res) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    const ok = await bcrypt.compare(password, auth.passwordHash || "");
+    const localProvider = auth.providers.find(p => p.type === 'local');
+    if (!localProvider) return res.status(401).json({ message: "Local login not available" });
+
+    const ok = await bcrypt.compare(password, localProvider.passwordHash || "");
+
     if (!ok) {
       // ⚠️ Trường hợp mật khẩu sai
       return res.status(401).json({ message: "Incorrect password" });
@@ -135,23 +144,20 @@ exports.loginWithGoogle = async (req, res) => {
     });
     const p = ticket.getPayload(); // { sub, email, name, picture, given_name, family_name, ... }
 
-    // 2) tìm hoặc tạo Auth
-    let auth = await Auth.findOne({ provider: 'google', providerId: p.sub });
-    if (!auth) {
-      const email = (p.email || '').toLowerCase();
-      // nếu đã có tài khoản theo email -> gắn thêm providerId
-      auth = await Auth.findOne({ email });
-      if (auth) {
-        auth.provider = 'google';
-        auth.providerId = p.sub;
+    let auth = await Auth.findOne({
+      providers: { $elemMatch: { type: 'google', providerId: p.sub } }
+    });
+    auth = await Auth.findOne({ email });
+    if (auth) {
+      if (!auth.providers.some(p => p.type === 'google')) {
+        auth.providers.push({ type: 'google', providerId: p.sub });
         await auth.save();
-      } else {
-        auth = await Auth.create({
-          email,
-          provider: 'google',
-          providerId: p.sub
-        });
       }
+    } else {
+      auth = await Auth.create({
+        email,
+        providers: [{ type: 'google', providerId: p.sub }]
+      });
     }
 
     // 3) phát token
@@ -282,9 +288,13 @@ exports.resetPasswordByPhone = async (req, res) => {
 
     // Hash mật khẩu mới
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    auth.passwordHash = passwordHash;
+    let localProvider = auth.providers.find(p => p.type === 'local');
+    if (!localProvider) {
+      auth.providers.push({ type: 'local', passwordHash });
+    } else {
+      localProvider.passwordHash = passwordHash;
+    }
     await auth.save();
-
     return res.json({ message: "Password has been reset successfully" });
   } catch (err) {
     return res.status(500).json({ message: "Reset password failed", error: err.message });
@@ -370,7 +380,11 @@ exports.checkCredentials = async (req, res) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    const ok = await bcrypt.compare(password, auth.passwordHash || "");
+    const localProvider = auth.providers.find(p => p.type === 'local');
+    if (!localProvider) return res.status(401).json({ message: "Local login not available" });
+
+    const ok = await bcrypt.compare(password, localProvider.passwordHash || "");
+
     if (!ok) {
       return res.status(401).json({ message: "Invalid password" });
     }
