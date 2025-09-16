@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const cloudinary = require("../config/cloudinary");
-
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 // Lấy danh sách user
 exports.getUsers = async (req, res) => {
   try {
@@ -29,7 +29,6 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // lấy authId từ token
     const authId = req.auth.id;
     if (!authId) return res.status(401).json({ message: "No authId in token" });
 
@@ -40,8 +39,9 @@ exports.createUser = async (req, res) => {
       DOB,
       height,
       weight,
-      avt // 👈 thêm avatar vào create
+      avt: avt || DEFAULT_AVATAR   // 👈 gán mặc định nếu không truyền
     });
+
     res.status(201).json(user);
   } catch (err) {
     res.status(500).json({ message: "Create user failed", error: err.message });
@@ -119,64 +119,6 @@ exports.updateUserHealth = async (req, res) => {
 };
 
 
-// Cập nhật avatar user (PATCH)
-exports.updateAvatar = async (req, res) => {
-  try {
-    const authId = req.auth.id; // lấy từ token
-    const { avt } = req.body;
-
-    if (!avt || typeof avt !== "string") {
-      return res.status(400).json({ message: "Avatar link is required" });
-    }
-
-    const updatedUser = await User.findOneAndUpdate(
-      { authId },
-      { $set: { avt } }, // chỉ update field avt
-      { new: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({
-      message: "Avatar updated successfully",
-      user: updatedUser
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Update avatar failed", error: err.message });
-  }
-};
-
-
-// Upload avatar và lưu link vào DB
-exports.uploadAvatar = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
-
-    // Upload file buffer lên Cloudinary bằng stream
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "uploads" }, // lưu file vào folder "uploads"
-      (error, result) => {
-        if (error) {
-          return res.status(500).json({ message: "Upload failed", error });
-        }
-
-        // Chỉ trả về link ảnh, không động đến DB
-        res.json({
-          message: "File uploaded successfully",
-          url: result.secure_url,
-        });
-      }
-    );
-
-    stream.end(req.file.buffer);
-  } catch (err) {
-    res.status(500).json({ message: "Upload failed", error: err.message });
-  }
-};
 
 
 // Upload avatar và update DB

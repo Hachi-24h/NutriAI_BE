@@ -9,8 +9,9 @@ router.post("/google", authCtrl.loginWithGoogle);
 router.post("/refresh", authCtrl.refresh);
 router.post("/logout", authCtrl.logout);
 router.post("/change-password", authCtrl.resetPasswordByPhone);
-router.post("/send-otp", authCtrl.sendOTP);
+router.post("/check-availability", authCtrl.checkAvailability);
 router.get("/all", authCtrl.getAll);
-
+router.post("/login-fingerprint", authCtrl.loginWithFingerprint);
+router.post("/check-credentials", authCtrl.checkCredentials);
 router.get("/me", requireAuth, authCtrl.getMe);
 module.exports = router;

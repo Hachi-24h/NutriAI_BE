@@ -8,7 +8,7 @@ const { OAuth2Client } = require("google-auth-library");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access-secret";
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh-secret";
-const ACCESS_TTL = "15m"; // 15 phút
+const ACCESS_TTL = "16m"; // 15 phút
 const REFRESH_TTL_DAYS = 30; // 30 ngày
 const axios = require('axios');
 
@@ -302,40 +302,87 @@ exports.getAll = async (req, res) => {
 
 
 
-// Gửi OTP
-exports.sendOTP = async (req, res) => {
+// check phone/email availability
+exports.checkAvailability = async (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: "Missing phone" });
+    const { phone, email } = req.body || {};
 
-    // Gửi OTP (TextFlow sẽ tự sinh mã và gửi SMS)
-    await textflow.sendVerificationSMS(phone, {
-      service_name: "My App",  // tên dịch vụ hiển thị trong SMS
-      seconds: 300             // thời hạn mã OTP (5 phút)
+    if (!phone && !email) {
+      return res.status(400).json({ message: "Missing phone or email" });
+    }
+
+    const existed = await Auth.findOne({
+      $or: [
+        ...(phone ? [{ phone }] : []),
+        ...(email ? [{ email: email.toLowerCase() }] : []),
+      ],
     });
 
-    res.json({ success: true, message: "OTP sent via TextFlow" });
-  } catch (err) {
-    console.error("sendOTP error:", err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// Xác minh OTP
-exports.verifyOTP = async (req, res) => {
-  try {
-    const { phone, code } = req.body;
-    if (!phone || !code) return res.status(400).json({ message: "Missing phone/code" });
-
-    const result = await textflow.verifyCode(phone, code);
-
-    if (result.valid) {
-      res.json({ success: true, message: "OTP verified" });
-    } else {
-      res.status(400).json({ success: false, message: "Invalid OTP" });
+    if (existed) {
+      return res.status(409).json({ message: "Phone or Email already exists" });
     }
+
+    return res.json({ available: true, message: "Phone/Email is available" });
   } catch (err) {
-    console.error("verifyOTP error:", err.message);
-    res.status(500).json({ success: false, message: err.message });
+    console.error("checkAvailability error:", err.message);
+    return res.status(500).json({ message: "Check availability failed", error: err.message });
   }
 };
+
+exports.loginWithFingerprint = async (req, res) => {
+  try {
+    const { phone } = req.body || {};
+    if (!phone) {
+      return res.status(400).json({ message: "Missing phone" });
+    }
+
+    const auth = await Auth.findOne({ phone });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    // 👉 Lúc này giả định FE đã xác thực vân tay, BE chỉ cần cấp token
+    const access_token = signAccessToken(auth);
+    const refresh_token = signRefreshToken(auth);
+    await saveRefreshToken(auth._id, refresh_token);
+
+    return res.json({
+      access_token,
+      refresh_token,
+      token_type: "Bearer",
+      expires_in: 900
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Fingerprint login failed", error: err.message });
+  }
+};
+
+// ====== CHECK PHONE + PASSWORD ======
+exports.checkCredentials = async (req, res) => {
+  try {
+    const { phone, password } = req.body || {};
+    if (!phone || !password) {
+      return res.status(400).json({ message: "Missing phone or password" });
+    }
+
+    const auth = await Auth.findOne({ phone });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    const ok = await bcrypt.compare(password, auth.passwordHash || "");
+    if (!ok) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // Nếu đúng thì chỉ trả kết quả OK, không sinh token
+    return res.json({
+      success: true,
+      message: "Phone & password valid"
+    });
+  } catch (err) {
+    console.error("checkCredentials error:", err);
+    return res.status(500).json({ message: "Check credentials failed", error: err.message });
+  }
+};
+

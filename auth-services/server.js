@@ -14,4 +14,4 @@ app.use(express.json());
 app.use("/auth", require("./routes/authRoutes"));
 
 const PORT = process.env.PORT || 5006;
-app.listen(PORT, () => console.log(`🚀 Review Service running on port ${PORT}`));
+app.listen(PORT, () => console.log(` ------Auth-Service running on port ${PORT}-------------\n`));
