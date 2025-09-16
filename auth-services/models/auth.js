@@ -7,6 +7,7 @@ const AuthSchema = new mongoose.Schema({
   provider: { type: String, enum: ['local', 'google'], default: 'local' },
   providerId: { type: String },                        // Google sub (id duy nhất từ Google)
   role: { type: String, default: 'user' },
+  emailVerified: { type: Boolean, default: false },
 
 }, { timestamps: true });
 
