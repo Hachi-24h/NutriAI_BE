@@ -300,8 +300,28 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
+// ====== change password by email
+exports.resetPasswordByEmail = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body || {};
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: "Missing email or new password" });
+    }
 
+    const auth = await Auth.findOne({ email: email.toLowerCase() });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
 
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    auth.passwordHash = passwordHash;
+    await auth.save();
+
+    return res.json({ message: "Password has been reset successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Reset password failed", error: err.message });
+  }
+};
 
 const textflow = require("textflow.js");
 
@@ -482,5 +502,41 @@ exports.confirmEmailChange = async (req, res) => {
     res.json({ success: true, message: "Email updated. Please verify new email." });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ====== CHECK PHONE ======
+exports.checkPhone = async (req, res) => {
+  try {
+    const { phone } = req.body || {};
+    if (!phone) {
+      return res.status(400).json({ message: "Missing phone" });
+    }
+
+    const existed = await Auth.findOne({ phone });
+    if (existed) {
+      return res.json({ exists: true });
+    }
+    return res.json({ exists: false });
+  } catch (err) {
+    return res.status(500).json({ message: "Check phone failed", error: err.message });
+  }
+};
+
+// ====== CHECK EMAIL ======
+exports.checkEmail = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ message: "Missing email" });
+    }
+
+    const existed = await Auth.findOne({ email: email.toLowerCase() });
+    if (existed) {
+      return res.json({ exists: true });
+    }
+    return res.json({ exists: false });
+  } catch (err) {
+    return res.status(500).json({ message: "Check email failed", error: err.message });
   }
 };
