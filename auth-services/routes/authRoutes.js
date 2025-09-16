@@ -13,6 +13,8 @@ router.post("/check-availability", authCtrl.checkAvailability);
 router.get("/all", authCtrl.getAll);
 router.post("/login-fingerprint", authCtrl.loginWithFingerprint);
 router.post("/check-credentials", authCtrl.checkCredentials);
+router.post("/link-google", requireAuth, authCtrl.linkGoogle);
+router.post("/link-phone", requireAuth, authCtrl.linkPhone);
 router.post("/change-password-email", authCtrl.resetPasswordByEmail);
 
 router.post("/send-email-verification", authCtrl.sendEmailVerification);
@@ -20,7 +22,6 @@ router.post("/verify-email", authCtrl.verifyEmail);
 
 router.post("/request-email-change", authCtrl.changeEmail);
 router.post("/confirm-email-change", authCtrl.confirmEmailChange);
-
 
 router.get("/me", requireAuth, authCtrl.getMe);
 
