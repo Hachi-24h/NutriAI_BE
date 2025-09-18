@@ -15,19 +15,7 @@ router.post("/login-fingerprint", authCtrl.loginWithFingerprint);
 router.post("/check-credentials", authCtrl.checkCredentials);
 router.post("/link-google", requireAuth, authCtrl.linkGoogle);
 router.post("/link-phone", requireAuth, authCtrl.linkPhone);
-// router.post("/change-password-email", authCtrl.resetPasswordByEmail);
 
-
-
-// router.post("/send-email-verification", authCtrl.sendEmailVerification);
-// router.post("/verify-email", authCtrl.verifyEmail);
-
-// router.post("/request-email-change", authCtrl.changeEmail);
-// router.post("/confirm-email-change", authCtrl.confirmEmailChange);
-
-// // check phone/email exist
-// router.post("/check-phone", authCtrl.checkPhone);
-// router.post("/check-email", authCtrl.checkEmail);
 
 router.get("/me", requireAuth, authCtrl.getMe);
 
