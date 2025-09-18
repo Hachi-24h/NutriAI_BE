@@ -307,6 +307,29 @@ exports.resetPasswordByPhone = async (req, res) => {
   }
 };
 
+// ====== change password by email
+exports.resetPasswordByEmail = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body || {};
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: "Missing email or new password" });
+    }
+
+    const auth = await Auth.findOne({ email: email.toLowerCase() });
+    if (!auth) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    auth.passwordHash = passwordHash;
+    await auth.save();
+
+    return res.json({ message: "Password has been reset successfully" });
+  } catch (err) {
+    return res.status(500).json({ message: "Reset password failed", error: err.message });
+  }
+};
+
 exports.getAll = async (req, res) => {
   try {
     const auth = await Auth.find();  // lấy toàn bộ collection User
@@ -315,8 +338,6 @@ exports.getAll = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 // check phone/email availability
 exports.checkAvailability = async (req, res) => {
@@ -475,5 +496,178 @@ exports.linkPhone = async (req, res) => {
   } catch (err) {
     console.error("Link Local error:", err.message);
     return res.status(500).json({ message: "Link Local failed", error: err.message });
+  }
+};
+
+// gửi mã xác thực về email
+exports.sendEmailVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Missing email" });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    emailVerificationCodes[email] = code;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER, // Gmail
+        pass: process.env.SMTP_PASS, // App password Gmail
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Verify your email",
+      text: `Your verification code is: ${code}`,
+      html: `<h2>Email Verification</h2>
+             <p>Your code is <b>${code}</b></p>`,
+    });
+
+    res.json({ success: true, message: "Verification code sent to email" });
+  } catch (err) {
+    console.error("sendEmailVerification error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// xác minh mã
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ message: "Missing email/code" });
+
+    if (emailVerificationCodes[email] && emailVerificationCodes[email] === code) {
+      // Xoá mã sau khi dùng
+      delete emailVerificationCodes[email];
+
+      // update DB
+      await Auth.updateOne({ email }, { $set: { emailVerified: true } });
+
+      return res.json({ success: true, message: "Email verified successfully" });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid code" });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// gửi OTP xác nhận đổi email
+exports.changeEmail = async (req, res) => {
+  try {
+    const { oldEmail, newEmail } = req.body;
+    if (!oldEmail || !newEmail) return res.status(400).json({ message: "Missing old/new email" });
+
+    // kiểm tra email mới đã tồn tại chưa
+    const existed = await Auth.findOne({ email: newEmail });
+    if (existed) return res.status(409).json({ message: "New email already in use" });
+
+    // tạo mã OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    emailChangeCodes[oldEmail] = { code, newEmail };
+
+    // gửi OTP về email cũ
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: oldEmail,
+      subject: "Confirm your email change",
+      text: `Your code to change email is: ${code}`,
+      html: `<p>Your code to change email is <b>${code}</b></p>`,
+    });
+
+    res.json({ success: true, message: "Verification code sent to current email" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.confirmEmailChange = async (req, res) => {
+  try {
+    const { oldEmail, code } = req.body;
+    if (!oldEmail || !code) return res.status(400).json({ message: "Missing fields" });
+
+    const record = emailChangeCodes[oldEmail];
+    if (!record || record.code !== code) {
+      return res.status(400).json({ message: "Invalid code" });
+    }
+
+    // cập nhật email mới
+    const auth = await Auth.findOneAndUpdate(
+      { email: oldEmail },
+      { $set: { email: record.newEmail, emailVerified: false } },
+      { new: true }
+    );
+
+    delete emailChangeCodes[oldEmail];
+
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    // gửi OTP verify đến email mới
+    const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+    emailVerificationCodes[auth.email] = verifyCode;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: auth.email,
+      subject: "Verify your new email",
+      text: `Your verification code is: ${verifyCode}`,
+    });
+
+    res.json({ success: true, message: "Email updated. Please verify new email." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+// ====== KIỂM TRA CÁCH ĐĂNG NHẬP (DÙNG TOKEN) ======
+exports.checkLoginMethods = async (req, res) => {
+  try {
+    // id đã có sẵn trong req.auth nhờ requireAuth middleware
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const methods = auth.providers.map(p => p.type);
+
+    if (methods.length === 1) {
+      return res.json({
+        message: `User chỉ có 1 phương thức đăng nhập: ${methods[0]}`,
+        methods
+      });
+    }
+
+    if (methods.length === 2) {
+      return res.json({
+        message: "User có đủ 2 phương thức đăng nhập: local + google",
+        methods
+      });
+    }
+
+    return res.json({
+      message: "User có nhiều phương thức đăng nhập",
+      methods
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Check login methods failed", error: err.message });
   }
 };
