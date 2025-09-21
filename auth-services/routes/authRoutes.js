@@ -14,7 +14,10 @@ router.get("/all", authCtrl.getAll);
 router.post("/login-fingerprint", authCtrl.loginWithFingerprint);
 router.post("/check-credentials", authCtrl.checkCredentials);
 router.post("/link-google", requireAuth, authCtrl.linkGoogle);
+router.post("/unlink-google", requireAuth, authCtrl.unlinkGoogle);   
 router.post("/link-phone", requireAuth, authCtrl.linkPhone);
+router.post("/unlink-phone", requireAuth, authCtrl.unlinkPhone);    
+
 router.post("/change-password-email", authCtrl.resetPasswordByEmail);
 
 router.post("/send-email-verification", authCtrl.sendEmailVerification);
@@ -26,3 +29,4 @@ router.post("/confirm-email-change", authCtrl.confirmEmailChange);
 router.get("/me", requireAuth, authCtrl.getMe);
 router.get("/check-login-methods", requireAuth, authCtrl.checkLoginMethods);
 module.exports = router;
+

@@ -12,6 +12,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh-secret";
 const ACCESS_TTL = "16m"; // 15 phút
 const REFRESH_TTL_DAYS = 30; // 30 ngày
 const axios = require('axios');
+const OtpCode = require("../models/OtpCode");
 
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
@@ -129,10 +130,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
-
-
-
 // === Đăng nhập/đăng ký Google (1 endpoint) ===
 exports.loginWithGoogle = async (req, res) => {
   try {
@@ -174,8 +171,9 @@ exports.loginWithGoogle = async (req, res) => {
     await saveRefreshToken(auth._id, refresh_token);
 
     // 4) Đảm bảo có user profile
+    // 4) Đảm bảo có user profile
     await ensureUserProfile(auth._id.toString(), {
-      fullname: name || `${given_name || ''} ${family_name || ''}`.trim() || 'Google User',
+      fullname: name || `${given_name || ''} ${family_name || ''}`.trim() || null,
       gender: 'OTHER',
       DOB: null,
       email: email || null,
@@ -193,7 +191,6 @@ exports.loginWithGoogle = async (req, res) => {
     return res.status(401).json({ message: 'Google login failed', error: err.message });
   }
 };
-
 
 // ====== REFRESH TOKEN ======
 exports.refresh = async (req, res) => {
@@ -263,21 +260,21 @@ exports.logout = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const auth = req.auth;
-    if (!auth) return res.status(401).json({ message: "Unauthorized" });
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
 
     return res.json({
       id: auth.id, 
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
-      emailVerified: auth.emailVerified, 
+      emailVerified: auth.emailVerified,
+      providers: auth.providers,
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
   }
 };
-
 
 // change password by phone
 exports.resetPasswordByPhone = async (req, res) => {
@@ -440,7 +437,6 @@ exports.linkGoogle = async (req, res) => {
       idToken: id_token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
-    console.log("Google ticket:", ticket);
     const { sub, email } = ticket.getPayload();
 
     // 2. Lấy user hiện tại từ token access
@@ -453,7 +449,14 @@ exports.linkGoogle = async (req, res) => {
       return res.status(400).json({ message: "Google account already linked" });
     }
 
-    // 4. Thêm provider mới
+    // 4. Kiểm tra email Google có trùng email hiện tại không
+    if (auth.email && auth.email !== email) {
+      return res.status(400).json({
+        message: "Google email must match your registered email"
+      });
+    }
+
+    // 5. Thêm provider mới
     auth.providers.push({ type: "google", providerId: sub });
     await auth.save();
 
@@ -502,6 +505,57 @@ exports.linkPhone = async (req, res) => {
   }
 };
 
+exports.unlinkGoogle = async (req, res) => {
+  try {
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    const beforeCount = auth.providers.length;
+    auth.providers = auth.providers.filter(p => p.type !== "google");
+
+    if (auth.providers.length === beforeCount) {
+      return res.status(400).json({ message: "Google account not linked" });
+    }
+
+    await auth.save();
+    return res.json({ message: "Google account unlinked successfully" });
+  } catch (err) {
+    console.error("Unlink Google error:", err.message);
+    return res.status(500).json({ message: "Unlink Google failed", error: err.message });
+  }
+};
+
+exports.unlinkPhone = async (req, res) => {
+  try {
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    const hasLocal = auth.providers.some(p => p.type === "local");
+    if (!hasLocal) {
+      return res.status(400).json({ message: "Phone account not linked" });
+    }
+
+    // ⚠️ Nếu unlink thì user phải còn ít nhất 1 provider khác (vd Google)
+    if (auth.providers.length <= 1) {
+      return res.status(400).json({ message: "Cannot unlink the only login method" });
+    }
+
+    // Xóa provider local
+    auth.providers = auth.providers.filter(p => p.type !== "local");
+
+    // Xóa field phone hoàn toàn
+    auth.set("phone", undefined, { strict: false });
+    auth.markModified("phone");
+
+    await auth.save();
+
+    return res.json({ message: "Phone account unlinked successfully" });
+  } catch (err) {
+    console.error("Unlink Phone error:", err.message);
+    return res.status(500).json({ message: "Unlink Phone failed", error: err.message });
+  }
+};
+
 // gửi mã xác thực về email
 exports.sendEmailVerification = async (req, res) => {
   try {
@@ -509,13 +563,17 @@ exports.sendEmailVerification = async (req, res) => {
     if (!email) return res.status(400).json({ message: "Missing email" });
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    emailVerificationCodes[email] = code;
 
+    // lưu vào DB, xóa code cũ nếu có
+    await OtpCode.deleteMany({ email: email.toLowerCase() });
+    await OtpCode.create({ email: email.toLowerCase(), code });
+
+    // gửi email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.SMTP_USER, // Gmail
-        pass: process.env.SMTP_PASS, // App password Gmail
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
@@ -524,8 +582,7 @@ exports.sendEmailVerification = async (req, res) => {
       to: email,
       subject: "Verify your email",
       text: `Your verification code is: ${code}`,
-      html: `<h2>Email Verification</h2>
-             <p>Your code is <b>${code}</b></p>`,
+      html: `<h2>Email Verification</h2><p>Your code is <b>${code}</b></p>`,
     });
 
     res.json({ success: true, message: "Verification code sent to email" });
@@ -541,17 +598,15 @@ exports.verifyEmail = async (req, res) => {
     const { email, code } = req.body;
     if (!email || !code) return res.status(400).json({ message: "Missing email/code" });
 
-    if (emailVerificationCodes[email] && emailVerificationCodes[email] === code) {
-      // Xoá mã sau khi dùng
-      delete emailVerificationCodes[email];
-
-      // update DB
-      await Auth.updateOne({ email }, { $set: { emailVerified: true } });
-
-      return res.json({ success: true, message: "Email verified successfully" });
-    } else {
-      return res.status(400).json({ success: false, message: "Invalid code" });
+    const record = await OtpCode.findOne({ email: email.toLowerCase(), code });
+    if (!record) {
+      return res.status(400).json({ success: false, message: "Invalid or expired code" });
     }
+
+    // xoá code sau khi dùng
+    await OtpCode.deleteMany({ email: email.toLowerCase() });
+
+    return res.json({ success: true, message: "Email verified successfully" });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -639,7 +694,6 @@ exports.confirmEmailChange = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 // ====== KIỂM TRA CÁCH ĐĂNG NHẬP (DÙNG TOKEN) ======
 exports.checkLoginMethods = async (req, res) => {
