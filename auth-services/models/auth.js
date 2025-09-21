@@ -9,6 +9,7 @@ const ProviderSchema = new mongoose.Schema({
 const AuthSchema = new mongoose.Schema({
   phone: { type: String, unique: true, sparse: true },
   email: { type: String, unique: true, sparse: true },
+  emailVerified: { type: Boolean, default: false }, // 👈 thêm dòng này
   providers: [ProviderSchema],     // 👈 danh sách provider
   role: { type: String, default: 'user' },
 }, { timestamps: true });

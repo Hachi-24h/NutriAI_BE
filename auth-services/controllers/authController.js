@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Auth = require("../models/auth");
 const RefreshToken = require("../models/RefreshToken");
+const nodemailer = require("nodemailer");
 const { OAuth2Client } = require("google-auth-library");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access-secret";
@@ -12,11 +13,11 @@ const ACCESS_TTL = "16m"; // 15 phút
 const REFRESH_TTL_DAYS = 30; // 30 ngày
 const axios = require('axios');
 const OtpCode = require("../models/OtpCode");
-const nodemailer = require("nodemailer");
 
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 const otpStore = {};
+const emailVerificationCodes = {};
 async function ensureUserProfile(authId, initialProfile = {}) {
   if (!USER_SERVICE_BASE_URL) return; // dev chưa set env thì bỏ qua
   try {
@@ -35,7 +36,7 @@ function sha256(s) {
 }
 function signAccessToken(auth) {
   return jwt.sign(
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role },
+    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role , emailVerified: auth.emailVerified },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );
@@ -129,10 +130,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
-
-
-
 // === Đăng nhập/đăng ký Google (1 endpoint) ===
 exports.loginWithGoogle = async (req, res) => {
   try {
@@ -194,7 +191,6 @@ exports.loginWithGoogle = async (req, res) => {
     return res.status(401).json({ message: 'Google login failed', error: err.message });
   }
 };
-
 
 // ====== REFRESH TOKEN ======
 exports.refresh = async (req, res) => {
@@ -268,18 +264,17 @@ exports.getMe = async (req, res) => {
     if (!auth) return res.status(404).json({ message: "User not found" });
 
     return res.json({
-      id: auth._id.toString(),
+      id: auth.id, 
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
-      providers: auth.providers, // ✅ luôn có
+      emailVerified: auth.emailVerified,
+      providers: auth.providers,
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
   }
 };
-
-
 
 // change password by phone
 exports.resetPasswordByPhone = async (req, res) => {
@@ -545,8 +540,13 @@ exports.unlinkPhone = async (req, res) => {
       return res.status(400).json({ message: "Cannot unlink the only login method" });
     }
 
+    // Xóa provider local
     auth.providers = auth.providers.filter(p => p.type !== "local");
-    auth.phone = null; // xoá số điện thoại
+
+    // Xóa field phone hoàn toàn
+    auth.set("phone", undefined, { strict: false });
+    auth.markModified("phone");
+
     await auth.save();
 
     return res.json({ message: "Phone account unlinked successfully" });
@@ -692,5 +692,39 @@ exports.confirmEmailChange = async (req, res) => {
     res.json({ success: true, message: "Email updated. Please verify new email." });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ====== KIỂM TRA CÁCH ĐĂNG NHẬP (DÙNG TOKEN) ======
+exports.checkLoginMethods = async (req, res) => {
+  try {
+    // id đã có sẵn trong req.auth nhờ requireAuth middleware
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const methods = auth.providers.map(p => p.type);
+
+    if (methods.length === 1) {
+      return res.json({
+        message: `User chỉ có 1 phương thức đăng nhập: ${methods[0]}`,
+        methods
+      });
+    }
+
+    if (methods.length === 2) {
+      return res.json({
+        message: "User có đủ 2 phương thức đăng nhập: local + google",
+        methods
+      });
+    }
+
+    return res.json({
+      message: "User có nhiều phương thức đăng nhập",
+      methods
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Check login methods failed", error: err.message });
   }
 };

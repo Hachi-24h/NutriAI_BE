@@ -11,7 +11,7 @@ module.exports = function requireAuth(req, res, next) {
   try {
     const payload = jwt.verify(token, JWT_ACCESS_SECRET, { issuer: 'auth-service' });
     // payload.sub = _id của Auth (bên auth service)
-    req.auth = { id: payload.sub, role: payload.role, email: payload.email, phone: payload.phone };
+    req.auth = { id: payload.sub, role: payload.role, email: payload.email, phone: payload.phone, emailVerified: payload.emailVerified };
     next();
   } catch (e) {
     return res.status(401).json({ message: 'Invalid or expired token' });
