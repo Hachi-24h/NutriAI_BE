@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Auth = require("../models/auth");
 const RefreshToken = require("../models/RefreshToken");
+const nodemailer = require("nodemailer");
 const { OAuth2Client } = require("google-auth-library");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access-secret";
@@ -15,6 +16,7 @@ const axios = require('axios');
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 const otpStore = {};
+const emailVerificationCodes = {};
 async function ensureUserProfile(authId, initialProfile = {}) {
   if (!USER_SERVICE_BASE_URL) return; // dev chưa set env thì bỏ qua
   try {
@@ -33,7 +35,7 @@ function sha256(s) {
 }
 function signAccessToken(auth) {
   return jwt.sign(
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role },
+    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role , emailVerified: auth.emailVerified },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );
@@ -265,10 +267,11 @@ exports.getMe = async (req, res) => {
     if (!auth) return res.status(401).json({ message: "Unauthorized" });
 
     return res.json({
-      id: auth.id,   // 👈 đổi từ _id sang id
+      id: auth.id, 
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
+      emailVerified: auth.emailVerified, 
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
