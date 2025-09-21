@@ -161,3 +161,35 @@ exports.uploadAndUpdateAvatar = async (req, res) => {
     res.status(500).json({ message: "Upload and update avatar failed", error: err.message });
   }
 };
+
+exports.ensureUserProfile = async (req, res) => {
+  try {
+    const { authId, fullname, gender, DOB, email, avatar } = req.body;
+
+    let user = await User.findOne({ authId });
+
+    if (!user) {
+      // Lần đầu tạo profile
+      user = await User.create({
+        authId,
+        fullname: fullname || "New User",
+        gender: gender || "OTHER",
+        DOB: DOB || null,
+        email: email || null,
+        avt: avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+      });
+      return res.json({ created: true, user });
+    }
+
+    // Nếu đã có profile, KHÔNG override fullname
+    if (email && !user.email) user.email = email;
+    if (avatar && !user.avt) user.avt = avatar;
+    if (gender && !user.gender) user.gender = gender;
+    if (DOB && !user.DOB) user.DOB = DOB;
+
+    await user.save();
+    return res.json({ created: false, user });
+  } catch (err) {
+    res.status(500).json({ message: "Ensure user profile failed", error: err.message });
+  }
+};
