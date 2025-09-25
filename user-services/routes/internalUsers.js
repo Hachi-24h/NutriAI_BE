@@ -23,7 +23,7 @@ router.post("/ensure", requireInternal, async (req, res) => {
       // 👉 Lần đầu tạo profile
       user = await User.create({
         authId,
-        fullname: fullname || "New User",
+        fullname: fullname || "+1 Lỗi",
         gender: finalGender,
         DOB: finalDOB,
         email: email || null,
