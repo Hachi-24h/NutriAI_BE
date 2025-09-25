@@ -110,3 +110,51 @@ exports.getAllDateMeals = async (req, res) => {
     res.status(500).json({ message: 'Get all dateMeals failed', error: err.message });
   }
 };
+
+
+exports.importMealPlan = async (req, res) => {
+  try {
+    const { schedule } = req.body; // chính là output của generatePlan
+
+    if (!Array.isArray(schedule) || schedule.length === 0) {
+      return res.status(400).json({ message: "schedule must be a non-empty array" });
+    }
+
+    // Lưu tất cả ngày
+    for (const day of schedule) {
+      // 1. Insert Meals trước
+      const mealDocs = [];
+      for (const meal of day.meals) {
+        const doc = await Meals.create({
+          nameMeals: meal.nameMeals,
+          description: meal.description,
+          totalCalor: meal.totalCalor,
+        });
+        mealDocs.push(doc._id.toString());
+      }
+
+      // 2. Insert MealsTime, mapping listMeals
+      const mealsTimeDocs = [];
+      for (const mt of day.mealsTime) {
+        // đổi listMeals (IDs tạm) sang IDs thực từ mealDocs
+        const listMealsIds = mt.listMeals.map((_, idx) => mealDocs[idx]);
+        const doc = await MealsTime.create({
+          typeTime: mt.typeTime,
+          time: mt.time,
+          listMeals: listMealsIds,
+        });
+        mealsTimeDocs.push(doc._id.toString());
+      }
+
+      // 3. Insert DateMeals
+      await DateMeals.create({
+        dateID: day.dateID,
+        listMealsTime: mealsTimeDocs,
+      });
+    }
+
+    res.status(201).json({ message: "Meal plan imported successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Import meal plan failed", error: err.message });
+  }
+};

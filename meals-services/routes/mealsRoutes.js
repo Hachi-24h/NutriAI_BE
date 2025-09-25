@@ -11,5 +11,5 @@ router.get('/getAllTime', ctrl.getAllMealsTime);
 
 router.post('/createDate', ctrl.createDateMeals);
 router.get('/getAllDate', ctrl.getAllDateMeals);
-
+router.post('/importPlan', ctrl.importMealPlan);
 module.exports = router;

@@ -1,11 +1,8 @@
-const express = require("express");
+import express from "express";
+import { generateSchedule } from "../controllers/scheduleController.js";
+
 const router = express.Router();
-const { createSchedule, getSchedules } = require("../controllers/scheduleController");
 
-// thêm schedule
-router.post("/create", createSchedule);
+router.post("/generate", generateSchedule);
 
-// lấy tất cả schedules
-router.get("/getAll", getSchedules);
-
-module.exports = router;
+export default router;
