@@ -1,15 +1,16 @@
-// routes/meals.js
-const express = require('express');
+// routes/mealsRoutes.js
+const express = require("express");
+const multer = require("multer");
 const router = express.Router();
-const ctrl = require('../controllers/mealsController');
+const upload = multer({ dest: "uploads/" });
 
-router.post('/create', ctrl.createMeals);
-router.get('/getAll', ctrl.getAllMeals);
+const { scanMeal, getMealsByDate } = require("../controllers/mealsController");
+const requireAuth = require("../middlewares/requireAuth");
 
-router.post('/createTime', ctrl.createMealsTime);
-router.get('/getAllTime', ctrl.getAllMealsTime);
+// 👇 POST /meals/scan
+router.post("/scan", requireAuth, upload.single("image"), scanMeal);
 
-router.post('/createDate', ctrl.createDateMeals);
-router.get('/getAllDate', ctrl.getAllDateMeals);
+// 👇 GET /meals/:dateID
+router.get("/:dateID", requireAuth, getMealsByDate);
 
 module.exports = router;

@@ -606,7 +606,18 @@ exports.verifyEmail = async (req, res) => {
     // xoá code sau khi dùng
     await OtpCode.deleteMany({ email: email.toLowerCase() });
 
-    return res.json({ success: true, message: "Email verified successfully" });
+    // ✅ cập nhật user: set emailVerified = true
+    const auth = await Auth.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { $set: { emailVerified: true } },
+      { new: true }
+    );
+
+    if (!auth) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.json({ success: true, message: "Email verified successfully", user: auth });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -726,5 +737,104 @@ exports.checkLoginMethods = async (req, res) => {
     });
   } catch (err) {
     return res.status(500).json({ message: "Check login methods failed", error: err.message });
+  }
+};
+
+exports.requestUnlink = async (req, res) => {
+  try {
+    const { type } = req.body; // "google" hoặc "phone"
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    if (type === "phone") {
+      // unlink phone => gửi OTP về email Google
+      const googleProvider = auth.providers.find(p => p.type === "google");
+      if (!googleProvider || !auth.email) {
+        return res.status(400).json({ message: "Google not linked" });
+      }
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await OtpCode.deleteMany({ email: auth.email });
+      await OtpCode.create({ email: auth.email, code });
+
+      // gửi email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      });
+      await transporter.sendMail({
+        from: `"NutriAI" <${process.env.SMTP_USER}>`,
+        to: auth.email,
+        subject: "Confirm unlink phone",
+        text: `Your unlink code is: ${code}`
+      });
+
+      return res.json({ success: true, message: "OTP sent to Google email" });
+    }
+
+    if (type === "google") {
+      // unlink google => gửi OTP về phone
+      if (!auth.phone) {
+        return res.status(400).json({ message: "Phone not linked" });
+      }
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      await OtpCode.deleteMany({ phone: auth.phone });
+      await OtpCode.create({ phone: auth.phone, code });
+
+      // TODO: gửi SMS qua service (Twilio / Viettel / Zalo…)
+      console.log(`Send SMS to ${auth.phone}: code ${code}`);
+
+      return res.json({ success: true, message: "OTP sent to phone" });
+    }
+
+    return res.status(400).json({ message: "Invalid type" });
+  } catch (err) {
+    console.error("requestUnlink error:", err.message);
+    return res.status(500).json({ message: "Request unlink failed", error: err.message });
+  }
+};
+
+exports.confirmUnlink = async (req, res) => {
+  try {
+    const { type, code } = req.body; // type = "google" hoặc "phone"
+    const auth = await Auth.findById(req.auth.id);
+    if (!auth) return res.status(404).json({ message: "User not found" });
+
+    if (type === "phone") {
+      // verify code qua email
+      const record = await OtpCode.findOne({ email: auth.email, code });
+      if (!record) return res.status(400).json({ message: "Invalid/expired code" });
+
+      if (auth.providers.length <= 1)
+        return res.status(400).json({ message: "Cannot unlink the only login method" });
+
+      // xoá local provider + phone
+      auth.providers = auth.providers.filter(p => p.type !== "local");
+      auth.set("phone", undefined, { strict: false });
+      auth.markModified("phone");
+      await auth.save();
+
+      await OtpCode.deleteMany({ email: auth.email });
+      return res.json({ success: true, message: "Phone unlinked successfully" });
+    }
+
+    if (type === "google") {
+      const record = await OtpCode.findOne({ phone: auth.phone, code });
+      if (!record) return res.status(400).json({ message: "Invalid/expired code" });
+
+      if (auth.providers.length <= 1)
+        return res.status(400).json({ message: "Cannot unlink the only login method" });
+
+      // xoá google provider
+      auth.providers = auth.providers.filter(p => p.type !== "google");
+      await auth.save();
+
+      await OtpCode.deleteMany({ phone: auth.phone });
+      return res.json({ success: true, message: "Google unlinked successfully" });
+    }
+
+    return res.status(400).json({ message: "Invalid type" });
+  } catch (err) {
+    console.error("confirmUnlink error:", err.message);
+    return res.status(500).json({ message: "Confirm unlink failed", error: err.message });
   }
 };

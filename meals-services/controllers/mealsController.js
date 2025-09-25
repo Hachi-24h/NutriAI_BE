@@ -1,112 +1,80 @@
 // controllers/mealsController.js
-const Meals = require('../models/meals');
-const MealsTime = require('../models/mealsTime');   // <-- nhớ tạo file models/mealstime.js theo schema bạn đã đưa
-const DateMeals = require('../models/dateMeals');   // <-- và models/datemeals.js tương tự
+const { detectFood } = require("../services/foodAI");
+const Meals = require("../models/meals");
+const MealsTime = require("../models/mealsTime");
+const DateMeals = require("../models/dateMeals");
 
-exports.createMeals = async (req, res) => {
+exports.scanMeal = async (req, res) => {
   try {
-    const { nameMeals, description, totalCalor } = req.body;
-    if (!nameMeals || totalCalor === undefined) {
-      return res.status(400).json({ message: 'nameMeals & totalCalor are required' });
+    const { typeTime } = req.body; // BREAKFAST/LUNCH/DINNER
+    const { file } = req;
+    if (!file) return res.status(400).json({ message: "No image uploaded" });
+
+    // 1. Nhận diện món từ AI
+    const result = await detectFood(file.path);
+
+    // 2. Lưu món ăn
+    const newMeal = await Meals.create({
+      nameMeals: result.foodName,
+      description: "AI detected",
+      totalCalor: result.calories
+    });
+
+    // 3. Tạo hoặc tìm DateMeals
+    const today = new Date().toISOString().split("T")[0];
+    let dateDoc = await DateMeals.findOne({ dateID: today });
+    if (!dateDoc) {
+      dateDoc = await DateMeals.create({ dateID: today, listMealsTime: [] });
     }
-    const doc = await Meals.create({ nameMeals, description, totalCalor });
-    res.status(201).json(doc);
+
+    // 4. Tạo hoặc tìm MealsTime
+    let mealsTimeDoc = await MealsTime.findOne({ typeTime });
+    if (!mealsTimeDoc) {
+      mealsTimeDoc = await MealsTime.create({
+        typeTime,
+        time: new Date().toTimeString().slice(0, 5),
+        listMeals: []
+      });
+      dateDoc.listMealsTime.push(mealsTimeDoc._id);
+      await dateDoc.save();
+    }
+
+    // 5. Gắn món vào bữa ăn
+    mealsTimeDoc.listMeals.push(newMeal._id);
+    await mealsTimeDoc.save();
+
+    // 6. Populate để trả về chi tiết thay vì chỉ trả ID
+    const populatedMealsTime = await MealsTime.findById(mealsTimeDoc._id).populate("listMeals");
+
+    return res.json({
+      date: dateDoc.dateID,
+      typeTime: populatedMealsTime.typeTime,
+      meals: populatedMealsTime.listMeals // 👈 full object
+    });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ message: 'Meal name already exists' });
-    }
-    res.status(400).json({ message: 'Create meal failed', error: err.message });
+    console.error("ScanMeal error:", err);
+    return res.status(500).json({ message: "Scan failed", error: err.message });
   }
 };
 
-exports.getAllMeals = async (req, res) => {
+// 👇 getMealsByDate giữ nguyên
+exports.getMealsByDate = async (req, res) => {
   try {
-    const docs = await Meals.find().sort('-createdAt');
-    res.json(docs);
+    const { dateID } = req.params;
+
+    const dateDoc = await DateMeals.findOne({ dateID })
+      .populate({
+        path: "listMealsTime",
+        populate: { path: "listMeals" }
+      });
+
+    if (!dateDoc) {
+      return res.status(404).json({ message: "No meals found for this date" });
+    }
+
+    return res.json(dateDoc);
   } catch (err) {
-    res.status(500).json({ message: 'Get all meals failed', error: err.message });
-  }
-};
-
-exports.createMealsTime = async (req, res) => {
-  try {
-    const { typeTime, time, listMeals } = req.body;
-
-    // validate input cơ bản (ngoài validator của Mongoose)
-    const ALLOWED = ['BREAKFAST', 'LUNCH', 'DINNER'];
-    if (!typeTime || !ALLOWED.includes(typeTime)) {
-      return res.status(400).json({ message: 'typeTime must be one of BREAKFAST|LUNCH|DINNER' });
-    }
-
-    const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
-    if (!time || !timeRe.test(time)) {
-      return res.status(400).json({ message: 'time must be HH:mm (00:00–23:59)' });
-    }
-
-    if (!Array.isArray(listMeals) || listMeals.length === 0) {
-      return res.status(400).json({ message: 'listMeals must be a non-empty array of strings' });
-    }
-
-    // làm sạch
-    const listMealsClean = listMeals.map(String).map(s => s.trim()).filter(Boolean);
-    if (listMealsClean.length === 0) {
-      return res.status(400).json({ message: 'listMeals has no usable values' });
-    }
-
-    const doc = await MealsTime.create({ typeTime, time, listMeals: listMealsClean });
-    res.status(201).json(doc);
-  } catch (err) {
-    // Nếu bạn thêm unique index (ví dụ unique { typeTime, time }) có thể bắt 11000:
-    if (err.code === 11000) {
-      return res.status(409).json({ message: 'MealsTime already exists for this type/time' });
-    }
-    res.status(400).json({ message: 'Create mealsTime failed', error: err.message });
-  }
-};
-
-exports.getAllMealsTime = async (req, res) => {
-  try {
-    const docs = await MealsTime.find().sort('-createdAt');
-    res.json(docs);
-  } catch (err) {
-    res.status(500).json({ message: 'Get all mealsTime failed', error: err.message });
-  }
-};
-
-exports.createDateMeals = async (req, res) => {
-  try {
-    const { dateID, listMealsTime } = req.body;
-
-    const dateRe = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-    if (!dateID || !dateRe.test(dateID)) {
-      return res.status(400).json({ message: 'dateID must be YYYY-MM-DD' });
-    }
-
-    if (!Array.isArray(listMealsTime) || listMealsTime.length === 0) {
-      return res.status(400).json({ message: 'listMealsTime must be a non-empty array of strings' });
-    }
-
-    const listMealsTimeClean = listMealsTime.map(String).map(s => s.trim()).filter(Boolean);
-    if (listMealsTimeClean.length === 0) {
-      return res.status(400).json({ message: 'listMealsTime has no usable values' });
-    }
-
-    const doc = await DateMeals.create({ dateID, listMealsTime: listMealsTimeClean });
-    res.status(201).json(doc);
-  } catch (err) {
-    // Nếu bạn set unique index cho dateID, có thể trả 409 khi trùng ngày
-    if (err.code === 11000) {
-      return res.status(409).json({ message: 'dateID already exists' });
-    }
-    res.status(400).json({ message: 'Create dateMeals failed', error: err.message });
-  }
-};
-
-exports.getAllDateMeals = async (req, res) => {
-  try {
-    const docs = await DateMeals.find().sort('-createdAt');
-    res.json(docs);
-  } catch (err) {
-    res.status(500).json({ message: 'Get all dateMeals failed', error: err.message });
+    console.error("GetMealsByDate error:", err.message);
+    return res.status(500).json({ message: "Get meals by date failed" });
   }
 };

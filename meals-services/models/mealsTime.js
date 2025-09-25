@@ -1,27 +1,16 @@
+// models/mealsTime.js
 const mongoose = require("mongoose");
-
 const MEAL_TYPES = ["BREAKFAST", "LUNCH", "DINNER"];
 
 const MealsTimeSchema = new mongoose.Schema({
-  // Enum cho loại bữa
-  typeTime: {
-    type: String,
-    enum: MEAL_TYPES,
-    required: true,
-    trim: true,
-  },
+  typeTime: { type: String, enum: MEAL_TYPES, required: true },
+  time: { type: String, required: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
 
-  // "HH:mm" (thêm regex cho chuẩn 00:00–23:59)
-  time: {
-    type: String,
-    required: true,
-    match: /^([01]\d|2[0-3]):[0-5]\d$/,
-  },
-
-  // Chỉ lưu ID các Meals; bắt buộc có và ít nhất 1 phần tử
+  // Gắn ID của Meals
   listMeals: [{
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Meals",
+    required: true
   }]
 }, { timestamps: true });
 
