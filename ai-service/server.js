@@ -1,37 +1,41 @@
-// server.js
 import express from "express";
+import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
-import { cuarnos } from "./utils/cuarnos.js";
 
-import { generatePlan } from "./utils/generatePlan.js";
+import { cuarnos } from "./utils/cuarnos.js";
+import { parseUserInfo } from "./utils/parseUserInfo.js";
+import { calculateNutritionNeeds } from "./utils/nutritionCalculator.js";
+
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-app.post("/generate-meal", async (req, res) => {
+/**
+ * API: Sinh meal plan 7 ngày
+ */
+app.post("/generate-plan", async (req, res) => {
   try {
-    const { info, totalDays = 30 } = req.body; // totalDays user chọn
-    if (!info) {
-      return res.status(400).json({ error: "Thiếu tham số info" });
-    }
+    // Chuẩn hóa input từ client
+    const userInfo = parseUserInfo(req.body);
 
-    const weekPlan = await cuarnos(info); // trả về { schedule: [...] }
-    const fullPlan = generatePlan([weekPlan], totalDays, new Date());
+    // Tính nhu cầu dinh dưỡng từ input
+    const nutritionNeeds = calculateNutritionNeeds(userInfo);
 
-    res.json({ schedule: fullPlan });
+    // Gọi AI sinh meal plan
+    const mealPlan = await cuarnos(userInfo, nutritionNeeds);
+
+    res.json(mealPlan);
   } catch (err) {
-    res.status(500).json({
-      error: "Không tạo được lịch ăn uống",
-      detail: err.message,
-    });
+    console.error("❌ Lỗi /generate-plan:", err);
+    res.status(500).json({ error: "Không thể tạo meal plan" });
   }
 });
 
-
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ AI service running on http://localhost:${PORT}`);
 });

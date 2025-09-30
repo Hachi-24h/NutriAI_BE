@@ -1,90 +1,120 @@
-// utils/cuarnos.js
 import OpenAI from "openai";
 import dotenv from "dotenv";
-
 dotenv.config();
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /**
- * Gọi OpenAI để sinh meal plan 7 ngày mẫu
- * @param {string} info - yêu cầu từ user (số ngày, bữa/ngày, dị ứng, mục tiêu…)
- * @returns {Object} JSON meal plan (schedule: [])
+ * Gọi OpenAI để sinh meal plan 7 ngày
+ * @param {Object} userInfo - thông tin user đã chuẩn hóa
+ * @param {Object} nutritionNeeds - nhu cầu calo & macros mỗi ngày
+ * @returns {Object} JSON meal plan
  */
-export async function cuarnos(info) {
-  try {
-    // Schema JSON để AI trả về dữ liệu khớp với MongoDB models
-    const schema = {
-      type: "object",
-      properties: {
-        schedule: {
-          type: "array",
-          description: "Danh sách các bữa ăn trong một ngày",
-          items: {
-            type: "object",
-            properties: {
-              meal: {
-                type: "string",
-                enum: ["BREAKFAST", "LUNCH", "DINNER"], // map sang MealsTime.typeTime
-              },
-              time: {
-                type: "string",
-                pattern: "^([01]\\d|2[0-3]):[0-5]\\d$", // HH:mm format
-              },
+export async function cuarnos(userInfo, nutritionNeeds) {
+  // Schema chuẩn để AI trả về JSON
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      schedule: {
+        type: "array",
+        description: "Danh sách thực đơn 7 ngày",
+        minItems: 7,
+        maxItems: 7,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            dateID: { type: "string", description: "Ngày yyyy-mm-dd" },
+            mealsTime: {
+              type: "array",
+              description: "Danh sách bữa ăn trong ngày",
               items: {
-                type: "array",
-                description: "Danh sách món trong bữa",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },              // map sang Meals.nameMeals
-                    description: { type: "string" },       // map sang Meals.description
-                    calories: { type: "number", minimum: 0 } // map sang Meals.totalCalor
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  typeTime: {
+                    type: "string",
+                    enum: ["BREAKFAST", "LUNCH", "DINNER", "SNACK"]
                   },
-                  required: ["name"]
-                }
-              },
-              notes: { type: "string" }
-            },
-            required: ["meal", "time", "items"]
-          }
+                  time: { type: "string", description: "Giờ ăn (HH:mm)" },
+                  listMeals: {
+                    type: "array",
+                    minItems: 1,
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        nameMeals: { type: "string" },
+                        description: { type: "string" },
+                        totalCalor: { type: "number" }
+                      },
+                      required: ["nameMeals", "description", "totalCalor"]
+                    }
+                  },
+                  notes: { type: "string" }
+                },
+                required: ["typeTime", "time", "listMeals", "notes"]
+              }
+            }
+          },
+          required: ["dateID", "mealsTime"]
         }
       },
-      required: ["schedule"]
-    };
+      nutrition: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          calories: { type: "number" },
+          protein: { type: "number" },
+          fat: { type: "number" },
+          carbs: { type: "number" }
+        },
+        required: ["calories", "protein", "fat", "carbs"]
+      }
+    },
+    required: ["schedule", "nutrition"]
+  };
 
-    // Gọi OpenAI với function-calling
+  const systemPrompt = `
+Bạn là chuyên gia dinh dưỡng người Việt. 
+Nhiệm vụ: tạo thực đơn 7 ngày cho người dùng với mục tiêu "${userInfo.goal}".
+
+⚡️ Nguyên tắc:
+- Tổng mỗi ngày: ~${nutritionNeeds.calories} kcal 
+  (Protein ~${nutritionNeeds.protein}g, Fat ~${nutritionNeeds.fat}g, Carb ~${nutritionNeeds.carbs}g).
+- Mỗi ngày chia ${userInfo.mealsPerDay || 3} bữa, có thể thêm bữa phụ (SNACK).
+- Bữa sáng có thể nhẹ (trái cây, sữa chua, yến mạch), bữa trưa và tối cân đối hơn.
+- Tránh món chiên/rán/dầu mỡ nếu mục tiêu là giảm cân hoặc có bệnh tim mạch.
+- Tránh các thực phẩm trong danh sách kiêng/dị ứng của user.
+- Trả về JSON đúng schema.`.trim();
+
+  const userPrompt = `
+Thông tin người dùng: ${JSON.stringify(userInfo)}
+Nhu cầu dinh dưỡng mỗi ngày: ${JSON.stringify(nutritionNeeds)}
+Hãy sinh ra thực đơn 7 ngày theo schema JSON.
+`.trim();
+
+  try {
     const response = await client.chat.completions.create({
-      model: "gpt-3.5-turbo-1106",
+      model: "gpt-5-mini",
       messages: [
-        {
-          role: "user",
-          content: `Tạo lịch trình ăn uống mẫu (7 ngày) theo yêu cầu sau: ${info}`,
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
       ],
-      functions: [
-        {
-          name: "generate_meal_plan",
-          description: "Sinh lịch trình ăn uống JSON theo schema MongoDB",
-          parameters: schema,
-        },
-      ],
-      function_call: { name: "generate_meal_plan" },
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "meal_plan_schema",
+          schema: schema,
+          strict: true
+        }
+      }
     });
 
-    let plan;
-    try {
-      plan = JSON.parse(response.choices[0].message.function_call.arguments);
-    } catch (parseErr) {
-      console.error("❌ Lỗi parse JSON:", parseErr);
-      throw new Error("AI trả về dữ liệu không hợp lệ, không parse được JSON.");
-    }
-
-    return plan;
+    return JSON.parse(response.choices[0].message.content);
   } catch (err) {
-    console.error("❌ Lỗi khi gọi OpenAI:", err.message);
-    throw new Error(`OpenAI API error: ${err.message}`);
+    console.error("❌ Lỗi cuarnos:", err);
+    throw new Error("AI không thể tạo meal plan");
   }
 }
