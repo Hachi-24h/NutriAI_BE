@@ -4,67 +4,68 @@ dotenv.config();
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-/**
- * Sinh meal plan dựa trên nutritionNeeds + user info (rút gọn schema)
- * @param {Object} userInfo - Thông tin người dùng
- * @param {Object} nutritionNeeds - Chỉ số dinh dưỡng từ bước 1 (có notes)
- * @returns {Object} mealPlan
- */
 export async function generateMealPlanAI(userInfo, nutritionNeeds) {
-  const prompt = `
-Bạn là chuyên gia dinh dưỡng. 
-Hãy tạo lịch ăn uống ${userInfo.mealsPerDay || 3} bữa/ngày cho ${userInfo.dateTemplate } ngày, phù hợp với thông tin sau:
+  try {
+    // 🧩 Chỉ giữ thông tin cần thiết
+    const cleanUser = {
+      mealsPerDay: userInfo.mealsPerDay || 3,
+      dateTemplate: userInfo.dateTemplate || 5,
+      dietaryRestrictions: userInfo.dietaryRestrictions || [],
+      budget: userInfo.budget || "vừa phải",
+      cookingPreference: userInfo.cookingPreference || "dễ nấu",
+      healthConditions: userInfo.healthConditions?.filter(v => v) || [],
+      extraNotes: userInfo.extraNotes || "",
+    };
 
-📌 Thông tin người dùng:
-${JSON.stringify(userInfo)}
-
-📌 Nhu cầu dinh dưỡng hằng ngày (từ bước 1):
-${JSON.stringify({
-    calories: nutritionNeeds.calories,
-    protein: nutritionNeeds.protein,
-    fat: nutritionNeeds.fat,
-    carbs: nutritionNeeds.carbs
-  })}
-
-📌 Ghi chú dinh dưỡng cần tuân theo:
-"${nutritionNeeds.notes}"
-
-⚠️ Yêu cầu:
-- Thực đơn phải thực tế, nguyên liệu dễ mua tại Việt Nam.
--Bữa sáng chiếm khoảng 25%, trưa 40%, tối 35%.
-- Tuân thủ các hạn chế trong user info (ví dụ: loại bỏ hành nếu user cấm).
-- Chỉ cần trả về theo ngày → danh sách các bữa ăn theo thứ tự (sáng, trưa, tối).
-- Mỗi món chỉ gồm: nameMeals, description, totalCalor.
-- Không cần trường typeTime, time, notes.
-- Chỉ xuất JSON, không kèm giải thích.
-
-Trả về JSON theo schema:
-{
-  "schedule": [
-    {
-      "dateID": "Ngày 1",
-      "meals": [
-        {
-          "nameMeals": "Tên món",
-          "description": "Mô tả ngắn",
-          "totalCalor": 350
-        }
-      ]
-    }
-  ],
-  "nutrition": {
-    "calories": number,
-    "protein": number,
-    "fat": number,
-    "carbs": number
-  }
-}
+    // ⚙️ System prompt
+    const systemPrompt = `
+Bạn là chuyên gia dinh dưỡng tại Việt Nam.
+Nhiệm vụ: tạo thực đơn ăn uống chi tiết dựa theo chỉ số dinh dưỡng đã có.
+Yêu cầu:
+- Nguyên liệu phổ biến ở Việt Nam, chi phí hợp lý.
+- Mỗi ngày chia thành ${cleanUser.mealsPerDay} bữa: sáng, trưa, tối.
+- Trong mỗi bữa, chỉ liệt kê tên món ăn không chứa khối lượng hay số lượng, cách nhau dấu phẩy (ví dụ: "Cơm, thịt heo nạc rim, rau củ luộc").
+- Tổng năng lượng chia: sáng 25%, trưa 40%, tối 35%.
+- Mỗi bữa phải có đủ: calories, protein, fat, carbs.
+- Nếu có bệnh lý, loại bỏ món không phù hợp.
+- mô tả mon ăn ngắn gọn không quá 30 chữ: như bao nhiêu gram, cách nấu, gia vị, ..., với trái cây thì ghi rõ loại 
+- Trả về JSON đúng schema, không thêm text khác.
 `;
 
-  try {
+    // 💬 User prompt
+    const userPrompt = `
+Tạo thực đơn trong ${cleanUser.dateTemplate} ngày dựa theo thông tin sau:
+
+📋 Ghi chú dinh dưỡng từ chuyên gia:
+"${nutritionNeeds.notes}"
+
+Nhu cầu dinh dưỡng mỗi ngày:
+- Calories: ${nutritionNeeds.calories} kcal
+- Protein: ${nutritionNeeds.protein} g
+- Fat: ${nutritionNeeds.fat} g
+- Carbs: ${nutritionNeeds.carbs} g
+
+Thông tin người dùng:
+- Dị ứng / kiêng: ${cleanUser.dietaryRestrictions.join(", ") || "Không có"}
+- Sở thích: ${cleanUser.extraNotes || "Không có"}
+- Tình trạng sức khỏe: ${cleanUser.healthConditions.join(", ") || "Không có"}
+- Ngân sách: ${cleanUser.budget}
+- Cách nấu: ${cleanUser.cookingPreference}
+
+Yêu cầu:
+- Tạo ${cleanUser.dateTemplate} ngày thực đơn khác nhau.
+- Mỗi ngày ${cleanUser.mealsPerDay} bữa, tổng calo xấp xỉ ${nutritionNeeds.calories} kcal/ngày.
+- Mỗi bữa phải có calories, protein, fat, carbs tương ứng.
+- Phân bổ macro theo tỉ lệ: sáng 25%, trưa 40%, tối 35%.
+`;
+
+    // 🚀 Gọi AI
     const response = await client.chat.completions.create({
       model: "gpt-5-mini",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: systemPrompt.trim() },
+        { role: "user", content: userPrompt.trim() },
+      ],
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -73,6 +74,7 @@ Trả về JSON theo schema:
             type: "object",
             additionalProperties: false,
             properties: {
+              notes: { type: "string" },
               schedule: {
                 type: "array",
                 items: {
@@ -88,37 +90,39 @@ Trả về JSON theo schema:
                         properties: {
                           nameMeals: { type: "string" },
                           description: { type: "string" },
-                          totalCalor: { type: "number" }
+                          calories: { type: "number" },
+                          protein: { type: "number" },
+                          fat: { type: "number" },
+                          carbs: { type: "number" },
                         },
-                        required: ["nameMeals", "description", "totalCalor"]
-                      }
-                    }
+                        required: [
+                          "nameMeals",
+                          "description",
+                          "calories",
+                          "protein",
+                          "fat",
+                          "carbs",
+                        ],
+                      },
+                    },
                   },
-                  required: ["dateID", "meals"]
-                }
-              },
-              nutrition: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  calories: { type: "number" },
-                  protein: { type: "number" },
-                  fat: { type: "number" },
-                  carbs: { type: "number" }
+                  required: ["dateID", "meals"],
                 },
-                required: ["calories", "protein", "fat", "carbs"]
-              }
+              },
             },
-            required: ["schedule", "nutrition"]
+            required: ["notes", "schedule"]
           },
-          strict: true
-        }
-      }
+          strict: true,
+        },
+      },
+      // ❌ bỏ temperature vì gpt-5-mini không hỗ trợ
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    // ✅ Parse kết quả JSON
+    const result = JSON.parse(response.choices[0].message.content);
+    return result.schedule;
   } catch (err) {
     console.error("❌ Lỗi generateMealPlanAI:", err);
-    throw new Error("AI không thể tạo meal plan");
+    throw new Error("AI không thể tạo lịch ăn uống");
   }
 }

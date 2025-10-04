@@ -13,6 +13,7 @@ export function parseUserInfo(body) {
     sleepSchedule: body.sleepSchedule || null,
     healthConditions: Array.isArray(body.healthConditions) ? body.healthConditions : [],
     extraNotes: body.extraNotes || null,
-    dateTemplate: body.dateTemplate || null
+    dateTemplate: body.dateTemplate || null,
+    day: body.day ? Number(body.day) : null,
   };
 }
