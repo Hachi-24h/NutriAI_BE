@@ -11,6 +11,7 @@ const AuthSchema = new mongoose.Schema({
   email: { type: String, unique: true, sparse: true },
   emailVerified: { type: Boolean, default: false }, // 👈 thêm dòng này
   providers: [ProviderSchema],     // 👈 danh sách provider
+  biometric: { type: Boolean, default: false }, // 👈 thêm dòng này
   role: { type: String, default: 'user' },
 }, { timestamps: true });
 

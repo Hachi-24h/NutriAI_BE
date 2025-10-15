@@ -36,7 +36,7 @@ function sha256(s) {
 }
 function signAccessToken(auth) {
   return jwt.sign(
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role , emailVerified: auth.emailVerified },
+    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );
@@ -66,9 +66,10 @@ exports.register = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const auth = await Auth.create({
-      phone,
-      email,
-      providers: [{ type: 'local', passwordHash }]
+      phone: phone.trim(),
+      email: email ? email.toLowerCase().trim() : email,
+      providers: [{ type: 'local', passwordHash }],
+      biometric: false // 👈 thêm dòng này
     });
 
     const access_token = signAccessToken(auth);
@@ -161,7 +162,8 @@ exports.loginWithGoogle = async (req, res) => {
     } else {
       auth = await Auth.create({
         email,
-        providers: [{ type: 'google', providerId: sub }]
+        providers: [{ type: 'google', providerId: sub }],
+        biometric: false // 👈 thêm dòng này
       });
     }
 
@@ -264,12 +266,13 @@ exports.getMe = async (req, res) => {
     if (!auth) return res.status(404).json({ message: "User not found" });
 
     return res.json({
-      id: auth.id, 
+      id: auth.id,
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
       emailVerified: auth.emailVerified,
       providers: auth.providers,
+      biometric: auth.biometric,
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
@@ -596,14 +599,20 @@ exports.sendEmailVerification = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { email, code } = req.body;
-    if (!email || !code) return res.status(400).json({ message: "Missing email/code" });
+    if (!email || !code)
+      return res.status(400).json({ message: "Missing email/code" });
 
     const record = await OtpCode.findOne({ email: email.toLowerCase(), code });
-    if (!record) {
+    if (!record)
       return res.status(400).json({ success: false, message: "Invalid or expired code" });
-    }
 
-    // xoá code sau khi dùng
+    // ✅ Cập nhật emailVerified = true
+    await Auth.updateOne(
+      { email: email.toLowerCase() },
+      { $set: { emailVerified: true } }
+    );
+
+    // Xoá code sau khi dùng
     await OtpCode.deleteMany({ email: email.toLowerCase() });
 
     return res.json({ success: true, message: "Email verified successfully" });

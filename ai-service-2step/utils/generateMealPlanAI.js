@@ -55,7 +55,7 @@ Thông tin người dùng:
 Yêu cầu:
 - Tạo ${cleanUser.dateTemplate} ngày thực đơn khác nhau.
 - Mỗi ngày ${cleanUser.mealsPerDay} bữa, tổng calo xấp xỉ ${nutritionNeeds.calories} kcal/ngày.
-- Mỗi bữa phải có calories, protein, fat, carbs tương ứng.
+- - Mỗi bữa phải có đủ 4 chỉ số [Calories, Protein, Fat, Carbs] và lưu trong mảng “CPFCa” theo đúng thứ tự [calo, protein, fat, carbs].
 - Phân bổ macro theo tỉ lệ: sáng 25%, trưa 40%, tối 35%.
 `;
 
@@ -74,7 +74,6 @@ Yêu cầu:
             type: "object",
             additionalProperties: false,
             properties: {
-              notes: { type: "string" },
               schedule: {
                 type: "array",
                 items: {
@@ -90,19 +89,15 @@ Yêu cầu:
                         properties: {
                           nameMeals: { type: "string" },
                           description: { type: "string" },
-                          calories: { type: "number" },
-                          protein: { type: "number" },
-                          fat: { type: "number" },
-                          carbs: { type: "number" },
+                          CPFCa: {
+                            type: "array",
+                            items: { type: "number" },
+                            minItems: 4,
+                            maxItems: 4,
+                            description: "[Calories, Protein, Fat, Carbs]"
+                          }
                         },
-                        required: [
-                          "nameMeals",
-                          "description",
-                          "calories",
-                          "protein",
-                          "fat",
-                          "carbs",
-                        ],
+                        required: ["nameMeals", "description", "CPFCa"],
                       },
                     },
                   },
@@ -110,7 +105,7 @@ Yêu cầu:
                 },
               },
             },
-            required: ["notes", "schedule"]
+            required: ["schedule"]
           },
           strict: true,
         },
@@ -120,7 +115,18 @@ Yêu cầu:
 
     // ✅ Parse kết quả JSON
     const result = JSON.parse(response.choices[0].message.content);
-    return result.schedule;
+    const mealTypes = ["sáng", "trưa", "chiều"];
+    const mealTimes = userInfo.mealTimes || ["07:00", "12:00", "18:30"];
+
+    result.schedule = result.schedule.map((day) => ({
+      ...day,
+      meals: day.meals.map((meal, i) => ({
+        ...meal,
+        mealType: mealTypes[i] || `bữa ${i + 1}`,
+        mealTime: mealTimes[i] || null
+      })),
+    }));
+    return result;
   } catch (err) {
     console.error("❌ Lỗi generateMealPlanAI:", err);
     throw new Error("AI không thể tạo lịch ăn uống");

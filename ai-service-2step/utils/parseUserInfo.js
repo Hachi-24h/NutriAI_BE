@@ -7,6 +7,7 @@ export function parseUserInfo(body) {
     height: body.height ? Number(body.height) : null,
     activity: body.activity ? body.activity.toLowerCase().trim() : null,
     mealsPerDay: body.mealsPerDay ? Number(body.mealsPerDay) : 3,
+    mealTimes: Array.isArray(body.mealTimes) ? body.mealTimes : ["07:00", "12:00", "18:30"], // 🆕 thêm giờ ăn
     dietaryRestrictions: Array.isArray(body.dietaryRestrictions) ? body.dietaryRestrictions : [],
     budget: body.budget || null,
     cookingPreference: body.cookingPreference || null,

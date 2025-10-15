@@ -90,7 +90,7 @@ Dưới đây là dữ liệu đã được tính toán theo công thức Miffli
 - Bệnh lý: ${userInfo.healthConditions?.join(", ") || "Không có"}
 
 Nhiệm vụ:
-- Viết **2–3 câu notes ngắn gọn** hướng dẫn ăn uống, ưu tiên thực phẩm tốt cho mục tiêu.
+- Viết **3–4 câu notes ngắn gọn** hướng dẫn ăn uống, ưu tiên thực phẩm tốt cho mục tiêu , và các hạn chế hay ko nên làm hoặc ăn trong quá trình thực đơn.
 - Nếu có bệnh lý, thêm lời khuyên phù hợp.
 - Không được thay đổi các con số trên.
 - Trả về JSON như sau (giữ nguyên định dạng):
