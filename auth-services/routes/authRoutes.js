@@ -28,5 +28,6 @@ router.post("/confirm-email-change", authCtrl.confirmEmailChange);
 
 router.get("/me", requireAuth, authCtrl.getMe);
 router.get("/check-login-methods", requireAuth, authCtrl.checkLoginMethods);
+router.post("/update-biometric", requireAuth, authCtrl.updateBiometric);
 module.exports = router;
 

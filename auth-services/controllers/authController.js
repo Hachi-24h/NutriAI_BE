@@ -737,3 +737,32 @@ exports.checkLoginMethods = async (req, res) => {
     return res.status(500).json({ message: "Check login methods failed", error: err.message });
   }
 };
+
+// ======= CAP NHẬT VÂN TAY =======
+exports.updateBiometric = async (req, res) => {
+  try {
+    const userId = req.auth.id;
+
+    // Lấy user hiện tại
+    const user = await Auth.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Đảo ngược giá trị biometric (true -> false, false -> true)
+    const newBiometricValue = !user.biometric;
+
+    // Cập nhật vào DB
+    await Auth.updateOne({ _id: userId }, { $set: { biometric: newBiometricValue } });
+
+    // Trả về giá trị mới
+    return res.json({
+      success: true,
+      message: "Biometric toggled successfully",
+      biometric: newBiometricValue
+    });
+  } catch (err) {
+    console.error("updateBiometric error:", err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
