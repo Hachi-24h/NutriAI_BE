@@ -15,6 +15,8 @@ app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/meals", require("./routes/mealsRoutes"));
+app.use("/foods", require("./routes/foodRoutes"));
 
 const PORT = process.env.PORT || 5007;
 app.listen(PORT, () => console.log(`🚀 Meals Service running on port ${PORT}`));
+

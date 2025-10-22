@@ -36,7 +36,7 @@ function sha256(s) {
 }
 function signAccessToken(auth) {
   return jwt.sign(
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role , emailVerified: auth.emailVerified },
+    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );
@@ -134,47 +134,51 @@ exports.login = async (req, res) => {
 exports.loginWithGoogle = async (req, res) => {
   try {
     const { id_token } = req.body || {};
-    if (!id_token) return res.status(400).json({ message: 'Missing id_token' });
+    if (!id_token)
+      return res.status(400).json({ message: "Missing id_token" });
 
-    // 1) Verify token với Google
     const ticket = await googleClient.verifyIdToken({
       idToken: id_token,
-      audience: process.env.GOOGLE_CLIENT_ID
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
-    // console.log("Google ticket:", ticket);
     const { sub, email, name, picture, given_name, family_name } = ticket.getPayload();
 
-    // 2) Tìm user trong DB
+    // 1️⃣ Tìm user theo providerId (google)
     let auth = await Auth.findOne({
-      providers: { $elemMatch: { type: 'google', providerId: sub } }
+      providers: { $elemMatch: { type: "google", providerId: sub } },
     });
 
+    // 2️⃣ Nếu không tìm thấy theo provider, thử tìm theo email
     if (!auth && email) {
-      auth = await Auth.findOne({ email: email.toLowerCase() });
-    }
+      const existed = await Auth.findOne({ email: email.toLowerCase() });
 
-    if (auth) {
-      if (!auth.providers.some(p => p.type === 'google')) {
-        auth.providers.push({ type: 'google', providerId: sub });
-        await auth.save();
+      // ✅ Nếu user tồn tại nhưng chưa link Google → chặn login
+      if (existed) {
+        return res.status(404).json({
+          message: "Google account not linked to any existing account. Please link your Google account first.",
+        });
       }
-    } else {
-      auth = await Auth.create({
-        email,
-        providers: [{ type: 'google', providerId: sub }]
-      });
     }
 
-    // 3) Sinh token
+    // 3️⃣ Nếu chưa có user nào cả → tạo mới bằng Google
+    if (!auth) {
+      auth = await Auth.create({
+        email: email?.toLowerCase() || null,
+        emailVerified: true,
+        providers: [{ type: "google", providerId: sub }],
+      });
+      console.log("🆕 Created new Google user:", email);
+    }
+
+    // 4️⃣ Sinh token
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
 
-    // 4) Đảm bảo có user profile
-    // 4) Đảm bảo có user profile
+    // 5️⃣ Đảm bảo profile tồn tại
     await ensureUserProfile(auth._id.toString(), {
-      fullname: name || `${given_name || ''} ${family_name || ''}`.trim() || null,
-      gender: 'OTHER',
+      fullname: name || `${given_name || ""} ${family_name || ""}`.trim() || null,
+      gender: "OTHER",
       DOB: null,
       email: email || null,
       avatar: picture || null,
@@ -183,12 +187,15 @@ exports.loginWithGoogle = async (req, res) => {
     return res.json({
       access_token,
       refresh_token,
-      token_type: 'Bearer',
-      expires_in: 900
+      token_type: "Bearer",
+      expires_in: 900,
     });
   } catch (err) {
-    console.error('Google login error:', err?.response?.data || err.message);
-    return res.status(401).json({ message: 'Google login failed', error: err.message });
+    console.error("Google login error:", err?.message);
+    return res.status(401).json({
+      message: "Google login failed. Invalid or expired token.",
+      error: err.message,
+    });
   }
 };
 
@@ -264,7 +271,7 @@ exports.getMe = async (req, res) => {
     if (!auth) return res.status(404).json({ message: "User not found" });
 
     return res.json({
-      id: auth.id, 
+      id: auth.id,
       email: auth.email,
       phone: auth.phone,
       role: auth.role,
@@ -280,30 +287,32 @@ exports.getMe = async (req, res) => {
 exports.resetPasswordByPhone = async (req, res) => {
   try {
     const { phone, newPassword } = req.body || {};
-
-    // Kiểm tra dữ liệu đầu vào
     if (!phone || !newPassword) {
-      return res.status(400).json({ message: "Missing phone or new password" });
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ số điện thoại và mật khẩu mới." });
     }
 
-    // Tìm user theo số điện thoại
     const auth = await Auth.findOne({ phone });
     if (!auth) {
-      return res.status(404).json({ message: "Account not found" });
+      return res.status(404).json({ message: "Không tìm thấy tài khoản với số điện thoại này." });
     }
 
-    // Hash mật khẩu mới
-    const passwordHash = await bcrypt.hash(newPassword, 12);
-    let localProvider = auth.providers.find(p => p.type === 'local');
-    if (!localProvider) {
-      auth.providers.push({ type: 'local', passwordHash });
-    } else {
-      localProvider.passwordHash = passwordHash;
+    if (!auth.phone) {
+      return res.status(400).json({ message: "Tài khoản của bạn chưa liên kết với số điện thoại nào." });
     }
+
+    const localProvider = auth.providers.find(p => p.type === "local");
+    if (!localProvider) {
+      return res.status(400).json({ message: "Tài khoản này không hỗ trợ đổi mật khẩu bằng số điện thoại." });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    localProvider.passwordHash = passwordHash;
     await auth.save();
-    return res.json({ message: "Password has been reset successfully" });
+
+    return res.json({ message: "✅ Mật khẩu đã được đổi thành công!" });
   } catch (err) {
-    return res.status(500).json({ message: "Reset password failed", error: err.message });
+    console.error("Reset Password Phone Error:", err);
+    return res.status(500).json({ message: "Đã xảy ra lỗi hệ thống khi đổi mật khẩu. Vui lòng thử lại sau." });
   }
 };
 
@@ -312,21 +321,42 @@ exports.resetPasswordByEmail = async (req, res) => {
   try {
     const { email, newPassword } = req.body || {};
     if (!email || !newPassword) {
-      return res.status(400).json({ message: "Missing email or new password" });
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ email và mật khẩu mới." });
     }
 
     const auth = await Auth.findOne({ email: email.toLowerCase() });
     if (!auth) {
-      return res.status(404).json({ message: "Account not found" });
+      return res.status(404).json({ message: "Không tìm thấy tài khoản với email này." });
     }
 
+    // ⚠️ Chưa xác thực email
+    if (!auth.emailVerified) {
+      return res.status(403).json({ message: "Email này chưa được xác thực. Vui lòng xác thực email trước khi đặt lại mật khẩu." });
+    }
+
+    // 🔍 Tìm provider local
+    let localProvider = auth.providers.find(p => p.type === "local");
+
+    // Nếu user dùng Google mà đã xác thực email → tự tạo local provider
+    if (!localProvider) {
+      const hasGoogle = auth.providers.some(p => p.type === "google");
+      if (hasGoogle) {
+        localProvider = { type: "local" };
+        auth.providers.push(localProvider);
+      } else {
+        return res.status(400).json({ message: "Tài khoản này không hỗ trợ đổi mật khẩu bằng email." });
+      }
+    }
+
+    // 🔒 Mã hóa và lưu lại mật khẩu
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    auth.passwordHash = passwordHash;
+    localProvider.passwordHash = passwordHash;
     await auth.save();
 
-    return res.json({ message: "Password has been reset successfully" });
+    return res.json({ message: "✅ Mật khẩu đã được đặt lại thành công!" });
   } catch (err) {
-    return res.status(500).json({ message: "Reset password failed", error: err.message });
+    console.error("Reset Password Email Error:", err);
+    return res.status(500).json({ message: "Đã xảy ra lỗi hệ thống khi đặt lại mật khẩu. Vui lòng thử lại sau." });
   }
 };
 
@@ -432,31 +462,31 @@ exports.linkGoogle = async (req, res) => {
     const { id_token } = req.body || {};
     if (!id_token) return res.status(400).json({ message: "Missing id_token" });
 
-    // 1. Verify token với Google
     const ticket = await googleClient.verifyIdToken({
       idToken: id_token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
     const { sub, email } = ticket.getPayload();
 
-    // 2. Lấy user hiện tại từ token access
     const auth = await Auth.findById(req.auth.id);
     if (!auth) return res.status(404).json({ message: "User not found" });
 
-    // 3. Kiểm tra nếu đã link Google rồi
+    // ✅ Chặn nếu email chưa verify
+    if (!auth.emailVerified) {
+      return res.status(403).json({ message: "Please verify your email before linking Google account." });
+    }
+
     const alreadyLinked = auth.providers.some(p => p.type === "google");
     if (alreadyLinked) {
       return res.status(400).json({ message: "Google account already linked" });
     }
 
-    // 4. Kiểm tra email Google có trùng email hiện tại không
     if (auth.email && auth.email !== email) {
       return res.status(400).json({
         message: "Google email must match your registered email"
       });
     }
 
-    // 5. Thêm provider mới
     auth.providers.push({ type: "google", providerId: sub });
     await auth.save();
 
@@ -510,18 +540,24 @@ exports.unlinkGoogle = async (req, res) => {
     const auth = await Auth.findById(req.auth.id);
     if (!auth) return res.status(404).json({ message: "User not found" });
 
-    const beforeCount = auth.providers.length;
-    auth.providers = auth.providers.filter(p => p.type !== "google");
-
-    if (auth.providers.length === beforeCount) {
+    const hasGoogle = auth.providers.some(p => p.type === "google");
+    if (!hasGoogle) {
       return res.status(400).json({ message: "Google account not linked" });
     }
 
+    // Không cho unlink nếu là phương thức đăng nhập duy nhất
+    if (auth.providers.length <= 1) {
+      return res.status(400).json({ message: "Cannot unlink the only login method" });
+    }
+
+    // Xóa provider google
+    auth.providers = auth.providers.filter(p => p.type !== "google");
     await auth.save();
-    return res.json({ message: "Google account unlinked successfully" });
+
+    return res.json({ message: "✅ Google account unlinked successfully!" });
   } catch (err) {
     console.error("Unlink Google error:", err.message);
-    return res.status(500).json({ message: "Unlink Google failed", error: err.message });
+    res.status(500).json({ message: "Unlink Google failed", error: err.message });
   }
 };
 
@@ -535,26 +571,22 @@ exports.unlinkPhone = async (req, res) => {
       return res.status(400).json({ message: "Phone account not linked" });
     }
 
-    // ⚠️ Nếu unlink thì user phải còn ít nhất 1 provider khác (vd Google)
     if (auth.providers.length <= 1) {
       return res.status(400).json({ message: "Cannot unlink the only login method" });
     }
 
-    // Xóa provider local
+    // Xóa provider local + clear phone
     auth.providers = auth.providers.filter(p => p.type !== "local");
-
-    // Xóa field phone hoàn toàn
-    auth.set("phone", undefined, { strict: false });
-    auth.markModified("phone");
-
+    auth.phone = null;
     await auth.save();
 
-    return res.json({ message: "Phone account unlinked successfully" });
+    return res.json({ message: "✅ Phone account unlinked successfully!" });
   } catch (err) {
     console.error("Unlink Phone error:", err.message);
-    return res.status(500).json({ message: "Unlink Phone failed", error: err.message });
+    res.status(500).json({ message: "Unlink Phone failed", error: err.message });
   }
 };
+
 
 // gửi mã xác thực về email
 exports.sendEmailVerification = async (req, res) => {
