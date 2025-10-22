@@ -1,80 +1,59 @@
-// controllers/mealsController.js
-const { detectFood } = require("../services/foodAI");
-const Meals = require("../models/meals");
-const MealsTime = require("../models/mealsTime");
-const DateMeals = require("../models/dateMeals");
+import ScannedMeal from "../models/scannedMeal.js";
+import { predictFood } from "../services/foodAI.js";
+import path from "path";
 
-exports.scanMeal = async (req, res) => {
+export const analyzeMeal = async (req, res) => {
   try {
-    const { typeTime } = req.body; // BREAKFAST/LUNCH/DINNER
-    const { file } = req;
-    if (!file) return res.status(400).json({ message: "No image uploaded" });
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
 
-    // 1. Nhận diện món từ AI
-    const result = await detectFood(file.path);
+    const result = await predictFood(req.file.path);
+    if (!result) return res.status(500).json({ message: "AI failed to predict" });
 
-    // 2. Lưu món ăn
-    const newMeal = await Meals.create({
-      nameMeals: result.foodName,
-      description: "AI detected",
-      totalCalor: result.calories
+    const imagePath = `/uploads/${path.basename(req.file.path)}`;
+
+    res.json({
+      food_en: result.name_en,
+      food_vi: result.name_vi,
+      confidence: result.confidence,
+      nutrition: result.nutrition,
+      example: result.example,
+      image_url: imagePath, // chỉ trả về ảnh để FE hiển thị
     });
-
-    // 3. Tạo hoặc tìm DateMeals
-    const today = new Date().toISOString().split("T")[0];
-    let dateDoc = await DateMeals.findOne({ dateID: today });
-    if (!dateDoc) {
-      dateDoc = await DateMeals.create({ dateID: today, listMealsTime: [] });
-    }
-
-    // 4. Tạo hoặc tìm MealsTime
-    let mealsTimeDoc = await MealsTime.findOne({ typeTime });
-    if (!mealsTimeDoc) {
-      mealsTimeDoc = await MealsTime.create({
-        typeTime,
-        time: new Date().toTimeString().slice(0, 5),
-        listMeals: []
-      });
-      dateDoc.listMealsTime.push(mealsTimeDoc._id);
-      await dateDoc.save();
-    }
-
-    // 5. Gắn món vào bữa ăn
-    mealsTimeDoc.listMeals.push(newMeal._id);
-    await mealsTimeDoc.save();
-
-    // 6. Populate để trả về chi tiết thay vì chỉ trả ID
-    const populatedMealsTime = await MealsTime.findById(mealsTimeDoc._id).populate("listMeals");
-
-    return res.json({
-      date: dateDoc.dateID,
-      typeTime: populatedMealsTime.typeTime,
-      meals: populatedMealsTime.listMeals // 👈 full object
-    });
-  } catch (err) {
-    console.error("ScanMeal error:", err);
-    return res.status(500).json({ message: "Scan failed", error: err.message });
+  } catch (error) {
+    console.error("❌ Analyze error:", error.message);
+    res.status(500).json({ message: error.message });
   }
 };
 
-// 👇 getMealsByDate giữ nguyên
-exports.getMealsByDate = async (req, res) => {
+export const saveScannedMeal = async (req, res) => {
   try {
-    const { dateID } = req.params;
+    const { food_en, food_vi, image_url, nutrition, confidence, mealType } = req.body;
 
-    const dateDoc = await DateMeals.findOne({ dateID })
-      .populate({
-        path: "listMealsTime",
-        populate: { path: "listMeals" }
-      });
+    if (!food_en || !image_url)
+      return res.status(400).json({ message: "Missing required fields" });
 
-    if (!dateDoc) {
-      return res.status(404).json({ message: "No meals found for this date" });
-    }
+    const saved = await ScannedMeal.create({
+      food_en,
+      food_vi,
+      image_url,
+      nutrition,
+      confidence,
+      mealType: mealType || "OTHER",
+    });
 
-    return res.json(dateDoc);
-  } catch (err) {
-    console.error("GetMealsByDate error:", err.message);
-    return res.status(500).json({ message: "Get meals by date failed" });
+    res.json({ message: "Meal saved successfully", saved });
+  } catch (error) {
+    console.error("❌ Save meal error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 📜 Lấy danh sách món đã scan
+export const getScannedMeals = async (req, res) => {
+  try {
+    const meals = await ScannedMeal.find().sort({ createdAt: -1 });
+    res.json(meals);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

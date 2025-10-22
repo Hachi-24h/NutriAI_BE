@@ -1,16 +1,12 @@
-// routes/mealsRoutes.js
 const express = require("express");
 const multer = require("multer");
+const { analyzeMeal, getScannedMeals, saveScannedMeal } = require("../controllers/mealsController");
+
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-const { scanMeal, getMealsByDate } = require("../controllers/mealsController");
-const requireAuth = require("../middlewares/requireAuth");
+router.post("/analyze", upload.single("file"), analyzeMeal);
+router.post("/save", saveScannedMeal);
+router.get("/history", getScannedMeals);
 
-// 👇 POST /meals/scan
-router.post("/scan", requireAuth, upload.single("image"), scanMeal);
-
-// 👇 GET /meals/:dateID
-router.get("/:dateID", requireAuth, getMealsByDate);
-
-module.exports = router;
+module.exports = router; // ✅ dùng CommonJS export
