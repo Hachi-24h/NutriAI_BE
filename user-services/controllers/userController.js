@@ -34,12 +34,12 @@ exports.createUser = async (req, res) => {
 
     const user = await User.create({
       authId,
-      fullname,
+      fullname : fullname.trim().tolowerCase(),
       gender,
       DOB,
-      height,
-      weight,
-      avt: avt || DEFAULT_AVATAR   // 👈 gán mặc định nếu không truyền
+      height : height.trim(),
+      weight : weight.trim(),
+      avt: avt?.trim() || DEFAULT_AVATAR  
     });
 
     res.status(201).json(user);
