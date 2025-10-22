@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/meals", require("./routes/mealsRoutes"));
+app.use("/meal", require("./routes/mealsRoutes"));
 
 const PORT = process.env.PORT || 5007;
 app.listen(PORT, () => console.log(`🚀 Review Service running on port ${PORT}`));

@@ -3,13 +3,7 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/mealsController');
 
-router.post('/create', ctrl.createMeals);
-router.get('/getAll', ctrl.getAllMeals);
+router.post("/create-meal-templates", ctrl.createMealTemplate);
+router.get("/get-meal-templates/:id", ctrl.getMealTemplate);
 
-router.post('/createTime', ctrl.createMealsTime);
-router.get('/getAllTime', ctrl.getAllMealsTime);
-
-router.post('/createDate', ctrl.createDateMeals);
-router.get('/getAllDate', ctrl.getAllDateMeals);
-router.post('/importPlan', ctrl.importMealPlan);
-module.exports = router;
+export default router;
