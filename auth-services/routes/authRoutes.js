@@ -26,6 +26,9 @@ router.post("/verify-email", authCtrl.verifyEmail);
 router.post("/request-email-change", authCtrl.changeEmail);
 router.post("/confirm-email-change", authCtrl.confirmEmailChange);
 
+router.post("/request-unlink", requireAuth, authCtrl.requestUnlink);   // gửi OTP
+router.post("/confirm-unlink", requireAuth, authCtrl.confirmUnlink);   // nhập OTP để unlink
+
 router.get("/me", requireAuth, authCtrl.getMe);
 router.get("/check-login-methods", requireAuth, authCtrl.checkLoginMethods);
 router.post("/update-biometric", requireAuth, authCtrl.updateBiometric);

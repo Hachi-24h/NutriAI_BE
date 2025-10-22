@@ -10,8 +10,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Static: để FE load ảnh trực tiếp
+app.use("/uploads", express.static("uploads"));
+
 // Routes
-app.use("/meal", require("./routes/mealsRoutes"));
+app.use("/meals", require("./routes/mealsRoutes"));
+app.use("/foods", require("./routes/foodRoutes"));
 
 const PORT = process.env.PORT || 5007;
-app.listen(PORT, () => console.log(`🚀 Review Service running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Meals Service running on port ${PORT}`));
+
