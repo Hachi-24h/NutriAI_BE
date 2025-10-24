@@ -1,10 +1,9 @@
-import express from "express";
+const express = require("express");
 const router = express.Router();
-const  ctrl = require("../controllers/scheduleController.js");
+const ctrl = require("../controllers/scheduleController");
+const requireAuth = require("../middlewares/requireAuth");
+router.post("/create-schedule",requireAuth, ctrl.createFullSchedule);
+router.get("/:id/get-schedule",requireAuth, ctrl.getFullSchedule);
+router.get("/get-me", requireAuth, ctrl.getSchedulesByUser); 
 
-
-
-router.post("/create-schedule", ctrl.createSchedule);
-router.get("/:id/full", ctrl.getFullSchedule);
-router.post("/create-schedule-full", ctrl.createFullScheduleFlow);
-export default router;
+module.exports = router;

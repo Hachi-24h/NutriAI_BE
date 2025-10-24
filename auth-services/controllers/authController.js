@@ -37,7 +37,6 @@ function sha256(s) {
 function signAccessToken(auth) {
   return jwt.sign(
     { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified },
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );

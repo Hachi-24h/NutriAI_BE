@@ -2,154 +2,163 @@ import axios from "axios";
 import Schedule from "../models/Schedule.js";
 
 /**
- * Tạo lịch ăn uống cá nhân từ template
+ * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
-export const createSchedule = async (req, res) => {
+export const createFullSchedule = async (req, res) => {
   try {
-    const { userId, title, description, templateId, startDate, daysToDistribute, goal, weight } = req.body;
+    const {
+      height,
+      weight,
+      gender,
+      age,
+      goal,
+      kgGoal,
+      duration,
+      startDate,
+      schedule,
+      nameSchedule
+    } = req.body;
 
-    if (!templateId || !userId || !startDate) {
-      return res.status(400).json({ message: "Thiếu dữ liệu bắt buộc" });
-    }
+    const userId = req.auth?.id;
+    if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
 
-    // 1️⃣ Gọi meal-service để lấy template
-    const { data: template } = await axios.get(`${process.env.MEAL_SERVICE_URL}/meal-templates/${templateId}`);
-    const templateDays = template.days.map(d => d.dateID);
+    if (!schedule || schedule.length === 0 || !startDate)
+      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
 
-    if (!templateDays || templateDays.length === 0) {
-      return res.status(400).json({ message: "Template không hợp lệ hoặc không có ngày ăn" });
-    }
+    // 1️⃣ Gọi meal-service để lưu template (token forwarding)
+    const mealRes = await axios.post(
+      "http://localhost:5002/meals-schedule/meal-templates",
+      {
+        goal,
+        kgGoal,
+        duration,
+        BMIUser: Math.round(weight / ((height / 100) ** 2)),
+        schedule
+      },
+      {
+        headers: { Authorization: req.headers.authorization } // ✅ forward token
+      }
+    );
 
-    // 2️⃣ Random các ngày từ template
-    const randomPlan = Array.from({ length: daysToDistribute }).map((_, i) => ({
+    const template = mealRes.data.template;
+    if (!template || !template._id)
+      return res.status(500).json({ message: "Không tạo được meal template" });
+
+    // 2️⃣ Lấy lại chi tiết template từ meal-service
+    const { data: templateDetail } = await axios.get(
+      `http://localhost:5002/meals-schedule/meal-templates/${template._id}`,
+      { headers: { Authorization: req.headers.authorization } } // ✅ forward token
+    );
+
+    const templateDays = templateDetail.days.map((d) => d._id);
+
+    const daily = Array.from({ length: duration }).map((_, i) => ({
       dayOrder: i + 1,
-      templateDay: templateDays[Math.floor(Math.random() * templateDays.length)]
+      idMealDay: templateDays[Math.floor(Math.random() * templateDays.length)]
     }));
 
-    // 3️⃣ Lưu schedule
-    const schedule = await Schedule.create({
+    // 3️⃣ Lưu Schedule
+    const scheduleDoc = await Schedule.create({
       userId,
-      title: title || `Kế hoạch ${goal || ""}`.trim(),
-      description: description || `Mục tiêu: ${goal} - Cân nặng: ${weight}kg`,
-      templateId,
+      nameSchedule:
+        nameSchedule || `${goal || "Chế độ ăn"} ${new Date().toISOString().split("T")[0]}`,
+      idTemplate: template._id,
       startDate,
-      daysToDistribute,
-      dailyPlan: randomPlan
+      endDate: new Date(new Date(startDate).getTime() + duration * 24 * 60 * 60 * 1000),
+      goal,
+      kgGoal,
+      height,
+      weight,
+      gender,
+      age,
+      daily
     });
 
     return res.status(201).json({
-      message: "Tạo lịch ăn thành công",
-      schedule
+      message: "Tạo lịch trình ăn uống thành công 🎯",
+      schedule: scheduleDoc
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Lỗi tạo Schedule:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 
 /**
- * Lấy full lịch ăn kèm chi tiết món ăn
+ * 📅 Lấy chi tiết 1 lịch trình
  */
 export const getFullSchedule = async (req, res) => {
   try {
-    const schedule = await Schedule.findById(req.params.id);
-    if (!schedule) return res.status(404).json({ message: "Không tìm thấy schedule" });
+    const userId = req.auth?.id;
+    const schedule = await Schedule.findOne({ _id: req.params.id, userId });
 
-    // Gọi meal-service để lấy template + MealDay
-    const { data: template } = await axios.get(`${process.env.MEAL_SERVICE_URL}/meal-templates/${schedule.templateId}`);
+    if (!schedule)
+      return res.status(404).json({ message: "Không tìm thấy lịch trình của user này" });
 
-    // Map ngày ăn thực tế
-    const fullPlan = schedule.dailyPlan.map((d, i) => {
-      const templateDay = template.days.find(t => t.dateID === d.templateDay);
+    const { data: template } = await axios.get(
+      `http://localhost:5002/meals-schedule/meal-templates/${schedule.idTemplate}`,
+      { headers: { Authorization: req.headers.authorization } } // ✅ forward token
+    );
+
+    const fullPlan = schedule.daily.map((item, idx) => {
+      const mealDay = template.days.find((d) => d._id === item.idMealDay);
       const actualDate = new Date(schedule.startDate);
-      actualDate.setDate(actualDate.getDate() + (i));
-      return { ...templateDay, actualDate: actualDate.toISOString().split("T")[0] };
+      actualDate.setDate(actualDate.getDate() + idx);
+      return { ...mealDay, actualDate: actualDate.toISOString().split("T")[0] };
     });
 
-    return res.json({
-      _id: schedule._id,
-      title: schedule.title,
-      goal: schedule.description,
-      startDate: schedule.startDate,
+    return res.status(200).json({
+      scheduleInfo: {
+        _id: schedule._id,
+        nameSchedule: schedule.nameSchedule,
+        goal: schedule.goal,
+        kgGoal: schedule.kgGoal,
+        height: schedule.height,
+        weight: schedule.weight,
+        gender: schedule.gender,
+        age: schedule.age,
+        duration: schedule.daily.length,
+        startDate: schedule.startDate,
+        endDate: schedule.endDate
+      },
       fullPlan
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Lỗi lấy lịch trình:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 
-
-export const createFullScheduleFlow = async (req, res) => {
+/**
+ * 📋 Lấy danh sách lịch trình của user
+ */
+export const getSchedulesByUser = async (req, res) => {
   try {
-    const {
-      userId,
-      startDate,
-      daysToDistribute,
-      goal,
-      weight,
-      name,
-      description,
-      schedule // danh sách Day1, Day2, Day3...
-    } = req.body;
+    const userId = req.auth?.id;
+    if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
 
-    if (!userId || !startDate || !schedule || schedule.length === 0) {
-      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
-    }
+    const schedules = await Schedule.find({ userId }).sort({ createdAt: -1 });
+    if (!schedules.length)
+      return res.status(404).json({ message: "Người dùng này chưa có lịch trình nào" });
 
-    // === 1️⃣ GỌI MEAL-SERVICE: Tạo MealTemplate ===
-    const mealServiceURL = process.env.MEAL_SERVICE_URL;
-    const { data: mealTemplateRes } = await axios.post(`${mealServiceURL}/meal-templates`, {
-      name: name || "Meal Plan Mẫu",
-      description: description || `Tạo từ mục tiêu ${goal || "chung"}`,
-      createdBy: userId,
-      schedule
-    });
-
-    const template = mealTemplateRes.template;
-    if (!template || !template._id) {
-      return res.status(500).json({ message: "Không tạo được template ăn uống" });
-    }
-
-    // === 2️⃣ RANDOM các ngày từ template ===
-    const { data: templateDetail } = await axios.get(`${mealServiceURL}/meal-templates/${template._id}`);
-    const templateDays = templateDetail.days.map(d => d.dateID);
-
-    const dailyPlan = Array.from({ length: daysToDistribute }).map((_, i) => ({
-      dayOrder: i + 1,
-      templateDay: templateDays[Math.floor(Math.random() * templateDays.length)]
+    const data = schedules.map((s) => ({
+      _id: s._id,
+      nameSchedule: s.nameSchedule,
+      goal: s.goal,
+      kgGoal: s.kgGoal,
+      status: s.status,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      createdAt: s.createdAt
     }));
 
-    // === 3️⃣ LƯU SCHEDULE ===
-    const scheduleDoc = await Schedule.create({
-      userId,
-      title: name || `Lịch ăn ${goal}`,
-      description: `Mục tiêu: ${goal} - Cân nặng: ${weight}kg`,
-      templateId: template._id,
-      startDate,
-      daysToDistribute,
-      dailyPlan
+    return res.status(200).json({
+      message: "Lấy danh sách lịch trình thành công ✅",
+      total: data.length,
+      schedules: data
     });
-
-    // === 4️⃣ TRẢ VỀ KẾT QUẢ HOÀN CHỈNH ===
-    return res.status(201).json({
-      message: "Tạo lịch ăn uống thành công 🎯",
-      schedule: {
-        scheduleId: scheduleDoc._id,
-        title: scheduleDoc.title,
-        startDate: scheduleDoc.startDate,
-        goal,
-        weight,
-        templateId: template._id,
-        dailyPlan: scheduleDoc.dailyPlan
-      }
-    });
-
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      message: "Lỗi khi tạo lịch ăn tự động",
-      error: err.message
-    });
+    console.error("❌ Lỗi lấy danh sách lịch trình:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };

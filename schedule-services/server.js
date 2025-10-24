@@ -15,4 +15,4 @@ app.use("/schedule", require("./routes/scheduleRoutes"));
 
 
 const PORT = process.env.PORT || 5003;
-app.listen(PORT, () => console.log(`🚀 Schedule Service running on port ${PORT}`));
+app.listen(PORT, () => console.log(`\n\n🚀 🚀 🚀 🚀 🚀 \n ------SCHEDULE-Service running on port ${PORT}-------------\n`));
