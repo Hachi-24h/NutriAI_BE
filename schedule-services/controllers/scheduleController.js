@@ -1,10 +1,10 @@
-import axios from "axios";
-import Schedule from "../models/Schedule.js";
+const axios = require("axios");
+const Schedule = require("../models/Schedule");
 
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
-export const createFullSchedule = async (req, res) => {
+ const createFullSchedule = async (req, res) => {
   try {
     const {
       height,
@@ -84,55 +84,12 @@ export const createFullSchedule = async (req, res) => {
   }
 };
 
-/**
- * 📅 Lấy chi tiết 1 lịch trình
- */
-export const getFullSchedule = async (req, res) => {
-  try {
-    const userId = req.auth?.id;
-    const schedule = await Schedule.findOne({ _id: req.params.id, userId });
 
-    if (!schedule)
-      return res.status(404).json({ message: "Không tìm thấy lịch trình của user này" });
-
-    const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/meal-templates/${schedule.idTemplate}`,
-      { headers: { Authorization: req.headers.authorization } } // ✅ forward token
-    );
-
-    const fullPlan = schedule.daily.map((item, idx) => {
-      const mealDay = template.days.find((d) => d._id === item.idMealDay);
-      const actualDate = new Date(schedule.startDate);
-      actualDate.setDate(actualDate.getDate() + idx);
-      return { ...mealDay, actualDate: actualDate.toISOString().split("T")[0] };
-    });
-
-    return res.status(200).json({
-      scheduleInfo: {
-        _id: schedule._id,
-        nameSchedule: schedule.nameSchedule,
-        goal: schedule.goal,
-        kgGoal: schedule.kgGoal,
-        height: schedule.height,
-        weight: schedule.weight,
-        gender: schedule.gender,
-        age: schedule.age,
-        duration: schedule.daily.length,
-        startDate: schedule.startDate,
-        endDate: schedule.endDate
-      },
-      fullPlan
-    });
-  } catch (err) {
-    console.error("❌ Lỗi lấy lịch trình:", err);
-    res.status(500).json({ message: "Lỗi server", error: err.message });
-  }
-};
 
 /**
  * 📋 Lấy danh sách lịch trình của user
  */
-export const getSchedulesByUser = async (req, res) => {
+ const getSchedulesByUser = async (req, res) => {
   try {
     const userId = req.auth?.id;
     if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
@@ -162,3 +119,55 @@ export const getSchedulesByUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
+
+/**
+ * 📅 Lấy chi tiết 1 lịch trình (có danh sách ngày và chi tiết bữa ăn)
+ */
+ const getFullSchedule = async (req, res) => {
+  try {
+    const userId = req.auth?.id;
+    const schedule = await Schedule.findOne({ _id: req.params.id, userId });
+
+    if (!schedule)
+      return res.status(404).json({ message: "Không tìm thấy lịch trình của user này" });
+
+    // 🔹 Gọi meal-service để lấy chi tiết template
+    const { data: template } = await axios.get(
+      `http://localhost:5002/meals-schedule/meal-templates/${schedule.idTemplate}`,
+      { headers: { Authorization: req.headers.authorization } }
+    );
+
+    // 🔹 Build danh sách ngày và bữa ăn chi tiết
+    const fullPlan = schedule.daily.map((item, idx) => {
+      const mealDay = template.days.find((d) => d._id === item.idMealDay);
+      const actualDate = new Date(schedule.startDate);
+      actualDate.setDate(actualDate.getDate() + idx);
+
+      return {
+        dayOrder: idx + 1,
+        actualDate: actualDate.toISOString().split("T")[0],
+        meals: mealDay?.meals || [],
+      };
+    });
+
+    // 🔹 Trả về dữ liệu chi tiết
+    return res.status(200).json({
+      _id: schedule._id,
+      nameSchedule: schedule.nameSchedule,
+      goal: schedule.goal,
+      kgGoal: schedule.kgGoal,
+      height: schedule.height,
+      weight: schedule.weight,
+      gender: schedule.gender,
+      age: schedule.age,
+      duration: schedule.daily.length,
+      startDate: schedule.startDate,
+      endDate: schedule.endDate,
+      fullPlan,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi lấy chi tiết Schedule:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule };
