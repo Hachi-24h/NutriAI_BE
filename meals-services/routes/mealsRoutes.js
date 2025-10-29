@@ -14,5 +14,3 @@ router.post("/create-meal-templates", ctrl.createMealTemplate);
 router.get("/get-meal-templates/:id", ctrl.getMealTemplate);
 
 module.exports = router; // ✅ dùng CommonJS export
-
-export default router;
