@@ -593,7 +593,6 @@ exports.unlinkPhone = async (req, res) => {
   }
 };
 
-
 // gửi mã xác thực về email
 exports.sendEmailVerification = async (req, res) => {
   try {
