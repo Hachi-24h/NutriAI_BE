@@ -12,7 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use("/schedule", require("./routes/scheduleRoutes"));
-
+app.use("/Ai-schedule", require("./routes/AiSchedule"));
 
 const PORT = process.env.PORT || 5003;
-app.listen(PORT, () => console.log(`🚀 Schedule Service running on port ${PORT}`));
+app.listen(PORT, () => console.log(`\n\n🚀 🚀 🚀 🚀 🚀 \n ------SCHEDULE-Service running on port ${PORT}-------------\n`));
