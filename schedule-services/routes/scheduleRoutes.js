@@ -5,5 +5,6 @@ const requireAuth = require("../middlewares/requireAuth");
 router.post("/create-schedule",requireAuth, ctrl.createFullSchedule);
 router.get("/get-schedule/:id", requireAuth, ctrl.getFullSchedule);
 router.get("/get-me", requireAuth, ctrl.getSchedulesByUser); 
+router.get("/next-meal", requireAuth, ctrl.getNextMealInCurrentSchedule);
 
 module.exports = router;
