@@ -48,7 +48,7 @@ const createFullSchedule = async (req, res) => {
 
     // 2️⃣ Lấy lại chi tiết template từ meal-service
     const { data: templateDetail } = await axios.get(
-      `http://localhost:5002/meals-schedule/meal-templates/${template._id}`,
+      `http://localhost:5002/meals-schedule/get-meal-templates/${template._id}`,
 
       { headers: { Authorization: req.headers.authorization } } // ✅ forward token
     );
@@ -136,7 +136,7 @@ const getFullSchedule = async (req, res) => {
 
     // 🔹 Gọi meal-service để lấy chi tiết template
     const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/meal-templates/${schedule.idTemplate}`,
+      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -176,9 +176,6 @@ const getFullSchedule = async (req, res) => {
 
 /**
  * 🕒 Lấy bữa ăn tiếp theo trong lịch trình hiện tại của user
- * - Nếu không có lịch active → báo "Không có lịch đang thực hiện"
- * - Nếu đã qua tất cả món hôm nay → trả về món đầu tiên của ngày mai + flag `isNextDay: true`
- * - Nếu là ngày cuối và hết món → báo "Chúc mừng bạn đã hoàn thành lịch trình 🎉"
  */
 const getNextMealInCurrentSchedule = async (req, res) => {
   try {
@@ -191,13 +188,13 @@ const getNextMealInCurrentSchedule = async (req, res) => {
       return res.status(404).json({ message: "Không có lịch trình nào đang thực hiện" });
     }
 
-    // 🔹 2️⃣ Lấy chi tiết lịch đầy đủ (bữa ăn)
+    // 🔹 2️⃣ Lấy chi tiết meal template (gồm meals)
     const { data: fullSchedule } = await axios.get(
-      `http://localhost:5002/meals-schedule/meal-templates/${schedule.idTemplate}`,
+      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
-    // 🔹 3️⃣ Gộp ngày + bữa ăn thực tế theo thứ tự
+    // 🔹 3️⃣ Gộp danh sách ngày + bữa ăn thực tế
     const days = schedule.daily.map((item, idx) => {
       const mealDay = fullSchedule.days.find((d) => d._id === item.idMealDay);
       const actualDate = new Date(schedule.startDate);
@@ -209,68 +206,139 @@ const getNextMealInCurrentSchedule = async (req, res) => {
       };
     });
 
-    // 🔹 4️⃣ Tính ngày hiện tại & thời gian hiện tại
+    // 🔹 4️⃣ Lấy ngày giờ hiện tại
     const now = new Date();
     const currentDateStr = now.toISOString().split("T")[0];
     const currentTime = now.toTimeString().slice(0, 5); // HH:mm
+    const start = new Date(schedule.startDate);
+    const end = new Date(schedule.endDate);
+    const startStr = start.toISOString().split("T")[0];
+    const endStr = end.toISOString().split("T")[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-    // 🔹 5️⃣ Xác định ngày hiện tại trong schedule
-    const currentDay = days.find((d) => d.actualDate === currentDateStr);
-
-    // ⏳ Nếu chưa đến lịch (hôm nay trước ngày start)
-    if (!currentDay && now < new Date(schedule.startDate)) {
-      return res.status(200).json({
-        message: "Lịch trình chưa bắt đầu",
-        startDate: schedule.startDate,
-      });
-    }
-
-    // ✅ Có ngày hôm nay → tìm bữa ăn tiếp theo
-    if (currentDay) {
-      const nextMeal = currentDay.meals.find((m) => m.mealTime > currentTime);
-
-      if (nextMeal) {
+    // =========================
+    // 🔹 CASE 1 + 2: Chưa tới ngày bắt đầu
+    // =========================
+    if (currentDateStr < startStr) {
+      if (tomorrowStr === startStr) {
+        const firstDay = days[0];
+        const firstMeal = firstDay?.meals?.[0] || null;
         return res.status(200).json({
-          message: "Bữa ăn sắp tới trong hôm nay 🍽️",
-          isNextDay: false,
-          dayOrder: currentDay.dayOrder,
-          actualDate: currentDay.actualDate,
-          meal: nextMeal,
-        });
-      }
-
-      // Nếu hết tất cả bữa hôm nay → tìm ngày mai
-      const nextDay = days.find((d) => d.dayOrder === currentDay.dayOrder + 1);
-      if (nextDay) {
-        return res.status(200).json({
-          message: "Đã qua giờ của hôm nay, đây là bữa ăn đầu tiên của ngày mai 🌅",
+          message: "Ngày mai là ngày bắt đầu lịch trình 🎯",
           isNextDay: true,
-          dayOrder: nextDay.dayOrder,
-          actualDate: nextDay.actualDate,
-          meal: nextDay.meals[0] || null,
+          startDate: schedule.startDate,
+          dayOrder: firstDay?.dayOrder,
+          actualDate: firstDay?.actualDate,
+          meal: firstMeal,
+          scheduleInfo: {
+            nameSchedule: schedule.nameSchedule,
+            goal: schedule.goal,
+            kgGoal: schedule.kgGoal,
+            duration: schedule.duration,
+          },
+        });
+      } else {
+        return res.status(200).json({
+          message: "Lịch trình chưa bắt đầu",
+          startDate: schedule.startDate,
+          scheduleInfo: {
+            nameSchedule: schedule.nameSchedule,
+            goal: schedule.goal,
+            kgGoal: schedule.kgGoal,
+          },
         });
       }
+    }
 
-      // Nếu hôm nay là ngày cuối cùng
+    // =========================
+    // 🔹 CASE 6: Đã qua toàn bộ lịch
+    // =========================
+    if (currentDateStr > endStr) {
       return res.status(200).json({
-        message: "🎉 Chúc mừng bạn đã hoàn thành lịch trình ăn uống!",
+        message: "🎉 Chúc mừng bạn đã hoàn thành toàn bộ lịch trình ăn uống!",
         done: true,
+        scheduleInfo: {
+          nameSchedule: schedule.nameSchedule,
+          goal: schedule.goal,
+        },
       });
     }
 
-    // ✅ Nếu đã qua toàn bộ lịch
-    if (now > new Date(schedule.endDate)) {
+    // =========================
+    // 🔹 CASE 3 → 5: Ngày hiện tại nằm trong lịch
+    // =========================
+    const currentDay = days.find((d) => d.actualDate === currentDateStr);
+    if (!currentDay) {
+      return res.status(404).json({ message: "Không tìm thấy dữ liệu cho ngày hiện tại" });
+    }
+
+    const firstMeal = currentDay.meals?.[0];
+    const nextMeal = currentDay.meals.find((m) => m.mealTime > currentTime);
+
+    // CASE 3: Chưa đến bữa đầu tiên
+    if (firstMeal && currentTime < firstMeal.mealTime) {
       return res.status(200).json({
-        message: "🎉 Chúc mừng bạn đã hoàn thành lịch trình ăn uống!",
-        done: true,
+        message: "Hôm nay là ngày trong lịch, đây là bữa ăn đầu tiên 🍳",
+        isFirstMealToday: true,
+        isNextDay: false,
+        dayOrder: currentDay.dayOrder,
+        actualDate: currentDay.actualDate,
+        meal: firstMeal,
+        scheduleInfo: {
+          nameSchedule: schedule.nameSchedule,
+          goal: schedule.goal,
+        },
       });
     }
 
-    return res.status(404).json({ message: "Không tìm thấy ngày phù hợp" });
+    // CASE 4: Có bữa sắp tới trong hôm nay
+    if (nextMeal) {
+      return res.status(200).json({
+        message: "Bữa ăn sắp tới trong hôm nay 🍽️",
+        isNextDay: false,
+        dayOrder: currentDay.dayOrder,
+        actualDate: currentDay.actualDate,
+        meal: nextMeal,
+        scheduleInfo: {
+          nameSchedule: schedule.nameSchedule,
+          goal: schedule.goal,
+        },
+      });
+    }
+
+    // CASE 5: Đã qua hết bữa hôm nay
+    const nextDay = days.find((d) => d.dayOrder === currentDay.dayOrder + 1);
+    if (nextDay) {
+      const firstMealNext = nextDay.meals?.[0] || null;
+      return res.status(200).json({
+        message: "Đã qua giờ của hôm nay, đây là bữa ăn đầu tiên của ngày mai 🌅",
+        isNextDay: true,
+        dayOrder: nextDay.dayOrder,
+        actualDate: nextDay.actualDate,
+        meal: firstMealNext,
+        scheduleInfo: {
+          nameSchedule: schedule.nameSchedule,
+          goal: schedule.goal,
+        },
+      });
+    }
+
+    // CASE 6: Hôm nay là ngày cuối cùng và đã ăn xong
+    return res.status(200).json({
+      message: "🎉 Chúc mừng bạn đã hoàn thành lịch trình ăn uống!",
+      done: true,
+      scheduleInfo: {
+        nameSchedule: schedule.nameSchedule,
+        goal: schedule.goal,
+      },
+    });
   } catch (err) {
     console.error("❌ Lỗi getNextMealInCurrentSchedule:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule , getNextMealInCurrentSchedule };
+
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule };
