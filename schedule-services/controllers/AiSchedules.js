@@ -1,12 +1,12 @@
 // controllers/mealController.js
-import { parseUserInfo } from "../utils/parseUserInfo.js";
-import { getNutritionAI } from "../utils/getNutritionAI.js";
-import { generateMealPlanAI } from "../utils/generateMealPlanAI.js";
+const { parseUserInfo } = require("../utils/parseUserInfo");
+const { getNutritionAI } = require("../utils/getNutritionAI");
+const { generateMealPlanAI } = require("../utils/generateMealPlanAI");
 
 /**
  * ✅ Bước 1 — chỉ tính nutrition (AI phân tích mục tiêu + thời gian + bệnh lý)
  */
-export const generateNutrition = async (req, res) => {
+ const generateNutrition = async (req, res) => {
   try {
     const userInfo = parseUserInfo(req.body);
     const nutrition = await getNutritionAI(userInfo);
@@ -24,7 +24,7 @@ export const generateNutrition = async (req, res) => {
 /**
  * ✅ Bước 2 — chỉ sinh meal plan (dựa vào nutrition có sẵn)
  */
-export const generateMealPlan = async (req, res) => {
+ const generateMealPlan = async (req, res) => {
   try {
     const { userInfo, nutrition } = req.body;
     if (!userInfo || !nutrition) {
@@ -42,7 +42,7 @@ export const generateMealPlan = async (req, res) => {
 /**
  * ✅ Bước 3 — chạy 2 bước liên tục (AI tính nutrition → meal plan)
  */
-export const generatePlan2Step = async (req, res) => {
+ const generatePlan2Step = async (req, res) => {
   try {
     const userInfo = parseUserInfo(req.body);
 
@@ -63,3 +63,4 @@ export const generatePlan2Step = async (req, res) => {
     res.status(500).json({ error: err.message || "AI không thể tạo meal plan" });
   }
 };
+module.exports = { generateNutrition, generateMealPlan, generatePlan2Step };
