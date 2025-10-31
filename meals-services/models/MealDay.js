@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const MealSchema = new mongoose.Schema({
-  mealType: { type: String, enum: ["sáng", "trưa", "chiều", "tối"], required: true },
+  mealType: { type: String, enum: ["sáng", "phụ sáng", "trưa", "chiều", "tối"], required: true },
   mealTime: { type: String, required: true },              // giờ ăn, ví dụ "07:00"
   mealName: { type: String, required: true },              // tên món
   description: { type: String },                           // mô tả chi tiết

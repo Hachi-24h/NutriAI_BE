@@ -15,6 +15,9 @@ export async function generateMealPlanAI(userInfo, nutritionNeeds) {
       cookingPreference: userInfo.cookingPreference || "dễ nấu",
       healthConditions: userInfo.healthConditions?.filter(v => v) || [],
       extraNotes: userInfo.extraNotes || "",
+      mealTimes: Array.isArray(userInfo.mealTimes)
+        ? userInfo.mealTimes
+        : ["07:00", "12:00", "18:30"],
     };
 
     // ⚙️ System prompt
@@ -23,9 +26,13 @@ Bạn là chuyên gia dinh dưỡng tại Việt Nam.
 Nhiệm vụ: tạo thực đơn ăn uống chi tiết dựa theo chỉ số dinh dưỡng đã có.
 Yêu cầu:
 - Nguyên liệu phổ biến ở Việt Nam, chi phí hợp lý.
-- Mỗi ngày chia thành ${cleanUser.mealsPerDay} bữa: sáng, trưa, tối.
+- Mỗi ngày chia thành ${cleanUser.mealsPerDay} bữa ăn theo khung giờ người dùng cung cấp.
 - Trong mỗi bữa, chỉ liệt kê tên món ăn không chứa khối lượng hay số lượng, cách nhau dấu phẩy (ví dụ: "Cơm, thịt heo nạc rim, rau củ luộc").
-- Tổng năng lượng chia: sáng 25%, trưa 40%, tối 35%.
+- Tổng năng lượng chia nếu là 3 bữa : sáng 25%, trưa 40%, tối 35%.
+- Tổng năng lượng chia nếu là 4 bữa :  ( Sáng 25%, trưa 35%, chiều 10% , Tối 30% ) hoặc (Sáng 25% ,phụ sáng  10% ,  trưa 35%, Tối 30% ) tùy theo user chọn bữa phụ khi nào.
+- Tổng năng lượng chia nếu là 5 bữa : Sáng 20% , phụ sáng  10% , trưa 35%, chiều 10% , Tối 25%
+- 
+- Nếu bữa ăn không thuộc sáng/trưa/tối (bữa phụ), chỉ nên là món nhẹ như trái cây, sữa chua, sinh tố, hạt, snack v.v.
 - Mỗi bữa phải có đủ: calories, protein, fat, carbs.
 - Nếu có bệnh lý, loại bỏ món không phù hợp.
 - mô tả mon ăn ngắn gọn không quá 30 chữ: như bao nhiêu gram, cách nấu, gia vị, ..., với trái cây thì ghi rõ loại 
@@ -51,11 +58,14 @@ Thông tin người dùng:
 - Tình trạng sức khỏe: ${cleanUser.healthConditions.join(", ") || "Không có"}
 - Ngân sách: ${cleanUser.budget}
 - Cách nấu: ${cleanUser.cookingPreference}
-
+- Số bữa mỗi ngày: ${cleanUser.mealsPerDay}
+- Giờ ăn trong ngày: ${cleanUser.mealTimes.join(", ")} 
 Yêu cầu:
 - Tạo ${cleanUser.dateTemplate} ngày thực đơn khác nhau.
+- Mỗi ngày có ${cleanUser.mealsPerDay} bữa tương ứng với khung giờ trên.
+- Các bữa sáng/trưa/tối là bữa chính, món ăn phải đủ năng lượng và đa dạng.
 - Mỗi ngày ${cleanUser.mealsPerDay} bữa, tổng calo xấp xỉ ${nutritionNeeds.calories} kcal/ngày.
-- - Mỗi bữa phải có đủ 4 chỉ số [Calories, Protein, Fat, Carbs] và lưu trong mảng “CPFCa” theo đúng thứ tự [calo, protein, fat, carbs].
+- Mỗi bữa phải có đủ 4 chỉ số [Calories, Protein, Fat, Carbs] và lưu trong mảng “CPFCa” theo đúng thứ tự [calo, protein, fat, carbs].
 - Phân bổ macro theo tỉ lệ: sáng 25%, trưa 40%, tối 35%.
 `;
 
@@ -120,11 +130,18 @@ Yêu cầu:
 
     result.schedule = result.schedule.map((day) => ({
       ...day,
-      meals: day.meals.map((meal, i) => ({
-        ...meal,
-        mealType: mealTypes[i] || `bữa ${i + 1}`,
-        mealTime: mealTimes[i] || null
-      })),
+      meals: day.meals.map((meal, i) => {
+        const type =
+          i === 0 ? "bữa sáng" :
+            i === 1 ? "bữa trưa" :
+              i === 2 ? "bữa tối" :
+                `bữa phụ ${i - 2}`;
+        return {
+          ...meal,
+          mealType: type,
+          mealTime: mealTimes[i] || null
+        };
+      }),
     }));
     return result;
   } catch (err) {

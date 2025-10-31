@@ -98,8 +98,14 @@ const getSchedulesByUser = async (req, res) => {
     if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
 
     const schedules = await Schedule.find({ userId }).sort({ createdAt: -1 });
-    if (!schedules.length)
-      return res.status(404).json({ message: "Người dùng này chưa có lịch trình nào" });
+    if (!schedules.length) {
+      return res.status(200).json({
+        message: "Người dùng này chưa có lịch trình nào 💤",
+        hasSchedule: false,
+        total: 0,
+        schedules: []
+      });
+    }
 
     const data = schedules.map((s) => ({
       _id: s._id,
@@ -185,7 +191,11 @@ const getNextMealInCurrentSchedule = async (req, res) => {
     // 🔹 1️⃣ Tìm lịch đang active
     const schedule = await Schedule.findOne({ userId, status: "active" });
     if (!schedule) {
-      return res.status(404).json({ message: "Không có lịch trình nào đang thực hiện" });
+      return res.status(200).json({
+        message: "Người dùng hiện chưa có lịch trình nào 💤",
+        hasSchedule: false,
+        nextMeal: null,
+      });
     }
 
     // 🔹 2️⃣ Lấy chi tiết meal template (gồm meals)
