@@ -57,3 +57,26 @@ export const getScannedMeals = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// 📜 Lấy 3 món gần nhất (simple data)
+export const getRecentScannedMeals = async (req, res) => {
+  try {
+    const meals = await ScannedMeal.find({}, "food_vi createdAt nutrition") // chỉ lấy 3 trường cần
+      .sort({ createdAt: -1 })
+      .limit(3);
+
+    const formatted = meals.map((m) => ({
+      name: m.food_vi,
+      time: m.createdAt,
+      nutrition: m.nutrition,
+    }));
+
+    res.json({
+      message: "Lấy 3 món gần nhất thành công ✅",
+      meals: formatted,
+    });
+  } catch (error) {
+    console.error("❌ getRecentScannedMeals error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
