@@ -29,7 +29,7 @@ Yêu cầu:
 - Mỗi ngày chia thành ${cleanUser.mealsPerDay} bữa ăn theo khung giờ người dùng cung cấp.
 - Trong mỗi bữa, chỉ liệt kê tên món ăn không chứa khối lượng hay số lượng, cách nhau dấu phẩy (ví dụ: "Cơm, thịt heo nạc rim, rau củ luộc").
 - Tổng năng lượng chia nếu là 3 bữa : sáng 25%, trưa 40%, tối 35%.
-- Tổng năng lượng chia nếu là 4 bữa :  ( Sáng 25%, trưa 35%, chiều 10% , Tối 30% ) hoặc (Sáng 25% ,phụ sáng  10% ,  trưa 35%, Tối 30% ) tùy theo user chọn bữa phụ khi nào.
+- Tổng năng lượng chia nếu là 4 bữa :  ( Sáng 25%, trưa 35%, chiều 10% , Tối 30% ) 
 - Tổng năng lượng chia nếu là 5 bữa : Sáng 20% , phụ sáng  10% , trưa 35%, chiều 10% , Tối 25%
 - 
 - Nếu bữa ăn không thuộc sáng/trưa/tối (bữa phụ), chỉ nên là món nhẹ như trái cây, sữa chua, sinh tố, hạt, snack v.v.
@@ -131,18 +131,36 @@ Yêu cầu:
     result.schedule = result.schedule.map((day) => ({
       ...day,
       meals: day.meals.map((meal, i) => {
-        const type =
-          i === 0 ? "bữa sáng" :
-            i === 1 ? "bữa trưa" :
-              i === 2 ? "bữa tối" :
-                `bữa phụ ${i - 2}`;
+        let type;
+
+        if (cleanUser.mealsPerDay === 3) {
+          // 3 bữa: sáng, trưa, tối
+          type = ["bữa sáng", "bữa trưa", "bữa tối"][i] || `bữa phụ ${i - 2}`;
+        }
+        else if (cleanUser.mealsPerDay === 4) {
+          // 4 bữa: sáng, trưa, chiều, tối
+          type = ["bữa sáng", "bữa trưa", "bữa chiều", "bữa tối"][i] || `bữa phụ ${i - 3}`;
+        }
+        else if (cleanUser.mealsPerDay === 5) {
+          // 5 bữa: sáng, phụ sáng, trưa, chiều, tối
+          type = ["bữa sáng", "bữa phụ sáng", "bữa trưa", "bữa chiều", "bữa tối"][i] || `bữa phụ ${i - 4}`;
+        }
+        else {
+          // fallback cho các trường hợp khác
+          type =
+            i === 0 ? "bữa sáng" :
+              i === cleanUser.mealsPerDay - 1 ? "bữa tối" :
+                `bữa phụ ${i}`;
+        }
+
         return {
           ...meal,
           mealType: type,
-          mealTime: mealTimes[i] || null
+          mealTime: mealTimes[i] || null,
         };
       }),
     }));
+
     return result;
   } catch (err) {
     console.error("❌ Lỗi generateMealPlanAI:", err);
