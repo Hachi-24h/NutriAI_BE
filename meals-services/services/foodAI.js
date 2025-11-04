@@ -13,7 +13,7 @@ export const predictFood = async (imagePath) => {
     console.time("📸 Flask /predict");
     const form = new FormData();
     form.append("file", fs.createReadStream(imagePath));
-    const flaskRes = await axios.post("http://127.0.0.1:5001/predict", form, {
+    const flaskRes = await axios.post("http://127.0.0.1:5008/predict", form, {
       headers: form.getHeaders(),
     });
     console.timeEnd("📸 Flask /predict");
