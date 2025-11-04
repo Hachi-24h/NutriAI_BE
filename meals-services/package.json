@@ -1,7 +1,6 @@
 {
   "name": "meals-services",
   "version": "1.0.0",
-
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,6 +14,7 @@
     "@google-cloud/translate": "^9.2.1",
     "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.12.2",
+    "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",

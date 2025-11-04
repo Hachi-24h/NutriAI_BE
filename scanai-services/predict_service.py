@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from torchvision import models, transforms
 from PIL import Image
 import torch, torch.nn as nn
-import io, base64, time, traceback
+import io, base64, time, traceback, requests
 from openai import OpenAI
 from deep_translator import GoogleTranslator
 
@@ -21,20 +21,12 @@ app = Flask(__name__)
 # =========================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = models.resnet18(pretrained=False)
-
-# Load danh sách lớp
 with open(CLASSES_PATH, "r", encoding="utf-8") as f:
     classes = [line.strip() for line in f.readlines()]
-
-# Sửa fc layer phù hợp với số class
 model.fc = nn.Linear(model.fc.in_features, len(classes))
-
-# Load trọng số nhưng bỏ qua fc nếu mismatch
 state_dict = torch.load(MODEL_PATH, map_location=device)
 filtered = {k: v for k, v in state_dict.items() if not k.startswith("fc.")}
-missing, unexpected = model.load_state_dict(filtered, strict=False)
-print(f"⚙️ Model loaded (ignored fc mismatch). Missing: {missing}")
-
+model.load_state_dict(filtered, strict=False)
 model.to(device)
 model.eval()
 
@@ -55,11 +47,26 @@ transform = transforms.Compose([
 def predict():
     try:
         start = time.time()
-        if "file" not in request.files:
-            return jsonify({"error": "No file uploaded"}), 400
+        image_bytes = None
 
-        file = request.files["file"]
-        image_bytes = file.read()
+        # ✅ Nhận file upload
+        if "file" in request.files:
+            print("📂 Received file upload")
+            file = request.files["file"]
+            image_bytes = file.read()
+
+        # ✅ Hoặc nhận Cloudinary URL
+        elif "image_url" in request.form or "image_url" in request.json:
+            image_url = request.form.get("image_url") or request.json.get("image_url")
+            print(f"🌐 Downloading image from URL: {image_url}")
+            response = requests.get(image_url)
+            response.raise_for_status()
+            image_bytes = response.content
+
+        else:
+            return jsonify({"error": "No file or image_url provided"}), 400
+
+        # ✅ Load ảnh
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         img_t = transform(image).unsqueeze(0).to(device)
 
@@ -109,7 +116,6 @@ def predict():
             gpt_output = gpt_res.choices[0].message.content.strip()
             print("✅ GPT response:", gpt_output)
 
-            # Tách EN/VI từ kết quả GPT
             food_en, food_vi = "Unknown", "Không xác định"
             for line in gpt_output.split("\n"):
                 if line.strip().lower().startswith("en:"):

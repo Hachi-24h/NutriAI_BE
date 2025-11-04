@@ -9,19 +9,33 @@ export const predictFood = async (imagePath) => {
   try {
     console.time("⏱️ Tổng thời gian predictFood");
 
-    // 1️⃣ Gửi ảnh sang Flask AI
-    console.time("📸 Flask /predict");
-    const form = new FormData();
-    form.append("file", fs.createReadStream(imagePath));
-    const flaskRes = await axios.post("http://127.0.0.1:5008/predict", form, {
-      headers: form.getHeaders(),
-    });
-    console.timeEnd("📸 Flask /predict");
+    let flaskRes;
+
+    // ✅ Nếu là URL Cloudinary → gửi JSON
+    if (imagePath.startsWith("http")) {
+      console.time("🌐 Flask /predict (URL)");
+      flaskRes = await axios.post(
+        "http://127.0.0.1:5008/predict", // ⚙️ port trùng Flask bạn đang chạy
+        { image_url: imagePath },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      console.timeEnd("🌐 Flask /predict (URL)");
+    } 
+    // ✅ Nếu là file local (ít khi dùng)
+    else {
+      console.time("📁 Flask /predict (file)");
+      const form = new FormData();
+      form.append("file", fs.createReadStream(imagePath));
+      flaskRes = await axios.post("http://127.0.0.1:5008/predict", form, {
+        headers: form.getHeaders(),
+      });
+      console.timeEnd("📁 Flask /predict (file)");
+    }
 
     const { food_en, food_vi, confidence } = flaskRes.data;
     console.log(`🍜 AI nhận dạng: ${food_vi} (${food_en}) [${(confidence * 100).toFixed(1)}%]`);
 
-    // 2️⃣ Nutritionix API
+    // 🥗 Nutritionix API
     console.time("🥗 Nutritionix");
     const nutriRes = await axios.post(
       "https://trackapi.nutritionix.com/v2/natural/nutrients",
@@ -41,6 +55,9 @@ export const predictFood = async (imagePath) => {
     let example = null;
 
     if (food) {
+      const weight = Math.max(50, Math.round((food.serving_weight_grams || 100) / 50) * 50);
+      const caloriesTotal = food.nf_calories * (weight / food.serving_weight_grams);
+
       nutrition = {
         calories: food.nf_calories,
         protein: food.nf_protein,
@@ -48,30 +65,12 @@ export const predictFood = async (imagePath) => {
         fat: food.nf_total_fat,
       };
 
-      const weight = food.serving_weight_grams || 100;
-      const caloriesTotal = food.nf_calories * (weight / food.serving_weight_grams);
-
-      if (food) {
-        nutrition = {
-          calories: food.nf_calories,
-          protein: food.nf_protein,
-          carbs: food.nf_total_carbohydrate,
-          fat: food.nf_total_fat,
-        };
-      
-        // Làm tròn trọng lượng về bội số 50
-        let weight = food.serving_weight_grams || 100;
-        weight = Math.max(50, Math.round(weight / 50) * 50); // ít nhất 50g
-      
-        // Tính lại tổng calo theo trọng lượng làm tròn
-        const caloriesTotal = food.nf_calories * (weight / food.serving_weight_grams);
-        example = {
-          serving_desc: food.serving_unit || "serving",
-          weight_grams: weight,
-          calories_total: Math.round(caloriesTotal),
-          note: `≈ ${Math.round(caloriesTotal)} kcal cho ${weight}g (${food.food_name})`,
-        };
-      }      
+      example = {
+        serving_desc: food.serving_unit || "serving",
+        weight_grams: weight,
+        calories_total: Math.round(caloriesTotal),
+        note: `≈ ${Math.round(caloriesTotal)} kcal cho ${weight}g (${food.food_name})`,
+      };
     }
 
     console.timeEnd("⏱️ Tổng thời gian predictFood");

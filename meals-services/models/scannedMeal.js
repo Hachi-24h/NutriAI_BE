@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 
 const ScannedMealSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
   food_en: { type: String, required: true },
   food_vi: { type: String, required: true },
   image_url: { type: String, required: true }, // Đường dẫn ảnh upload
