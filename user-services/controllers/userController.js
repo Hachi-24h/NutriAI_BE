@@ -34,7 +34,7 @@ exports.createUser = async (req, res) => {
 
     const user = await User.create({
       authId,
-      fullname : fullname.trim().tolowerCase(),
+      fullname : fullname.trim().toLowerCase(),
       gender,
       DOB,
       height : height.trim(),
@@ -117,9 +117,6 @@ exports.updateUserHealth = async (req, res) => {
       .json({ message: "Update user health failed", error: err.message });
   }
 };
-
-
-
 
 // Upload avatar và update DB
 exports.uploadAndUpdateAvatar = async (req, res) => {
