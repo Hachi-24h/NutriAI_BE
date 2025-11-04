@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  authId: { type: mongoose.Schema.Types.ObjectId, required: true }, // chỉ lưu id
+  authId: { type: String, required: true }, // 👈 sửa thành String
   fullname: { type: String, required: true },
   gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'], default: 'OTHER' },
   DOB: { type: Date, required: true },

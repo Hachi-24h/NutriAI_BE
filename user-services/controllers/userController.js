@@ -34,7 +34,7 @@ exports.createUser = async (req, res) => {
 
     const user = await User.create({
       authId,
-      fullname : fullname.trim().toLowerCase(),
+      fullname : fullname.trim(),
       gender,
       DOB,
       height : height.trim(),
