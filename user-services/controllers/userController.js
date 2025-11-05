@@ -118,9 +118,6 @@ exports.updateUserHealth = async (req, res) => {
   }
 };
 
-
-
-
 // Upload avatar và update DB
 exports.uploadAndUpdateAvatar = async (req, res) => {
   try {

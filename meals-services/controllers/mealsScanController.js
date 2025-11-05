@@ -1,15 +1,25 @@
-import ScannedMeal from "../models/scannedMeal.js";
-import { predictFood } from "../services/foodAI.js";
-import path from "path";
+const ScannedMeal = require("../models/scannedMeal");
+const { predictFood } = require("../services/foodAI");
+const cloudinary = require("../config/cloudinary");
 
-export const analyzeMeal = async (req, res) => {
+// 📸 Phân tích món ăn
+const analyzeMeal = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No image uploaded" });
 
-    const result = await predictFood(req.file.path);
-    if (!result) return res.status(500).json({ message: "AI failed to predict" });
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "scanned_meals" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
 
-    const imagePath = `/uploads/${path.basename(req.file.path)}`;
+    const result = await predictFood(uploadResult.secure_url);
+    if (!result) return res.status(500).json({ message: "AI failed to predict" });
 
     res.json({
       food_en: result.name_en,
@@ -17,22 +27,25 @@ export const analyzeMeal = async (req, res) => {
       confidence: result.confidence,
       nutrition: result.nutrition,
       example: result.example,
-      image_url: imagePath, // chỉ trả về ảnh để FE hiển thị
+      image_url: uploadResult.secure_url,
     });
   } catch (error) {
-    console.error("❌ Analyze error:", error.message);
+    console.error("❌ analyzeMeal error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-export const saveScannedMeal = async (req, res) => {
+// 💾 Lưu món ăn theo userId
+const saveScannedMeal = async (req, res) => {
   try {
-    const { food_en, food_vi, image_url, nutrition, confidence, mealType } = req.body;
+    const { userId, food_en, food_vi, image_url, nutrition, confidence, mealType } = req.body;
 
-    if (!food_en || !image_url)
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!userId || !food_en || !image_url) {
+      return res.status(400).json({ message: "Missing required fields (userId, food_en, image_url)" });
+    }
 
     const saved = await ScannedMeal.create({
+      userId,
       food_en,
       food_vi,
       image_url,
@@ -43,25 +56,32 @@ export const saveScannedMeal = async (req, res) => {
 
     res.json({ message: "Meal saved successfully", saved });
   } catch (error) {
-    console.error("❌ Save meal error:", error.message);
+    console.error("❌ saveScannedMeal error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// 📜 Lấy danh sách món đã scan
-export const getScannedMeals = async (req, res) => {
+// 📜 Lấy danh sách món ăn của user
+const getScannedMeals = async (req, res) => {
   try {
-    const meals = await ScannedMeal.find().sort({ createdAt: -1 });
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
+
+    const meals = await ScannedMeal.find({ userId }).sort({ createdAt: -1 });
     res.json(meals);
   } catch (error) {
+    console.error("❌ getScannedMeals error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// 📜 Lấy 3 món gần nhất (simple data)
-export const getRecentScannedMeals = async (req, res) => {
+// 📜 Lấy 3 món gần nhất của user
+const getRecentScannedMeals = async (req, res) => {
   try {
-    const meals = await ScannedMeal.find({}, "food_vi createdAt nutrition") // chỉ lấy 3 trường cần
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: "Missing userId" });
+
+    const meals = await ScannedMeal.find({ userId }, "food_vi createdAt nutrition image_url")
       .sort({ createdAt: -1 })
       .limit(3);
 
@@ -69,14 +89,19 @@ export const getRecentScannedMeals = async (req, res) => {
       name: m.food_vi,
       time: m.createdAt,
       nutrition: m.nutrition,
+      image_url: m.image_url,
     }));
 
-    res.json({
-      message: "Lấy 3 món gần nhất thành công ✅",
-      meals: formatted,
-    });
+    res.json({ message: "Lấy 3 món gần nhất thành công ✅", meals: formatted });
   } catch (error) {
     console.error("❌ getRecentScannedMeals error:", error);
     res.status(500).json({ message: error.message });
   }
+};
+
+module.exports = {
+  analyzeMeal,
+  saveScannedMeal,
+  getScannedMeals,
+  getRecentScannedMeals,
 };
