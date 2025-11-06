@@ -14,7 +14,6 @@ const ScannedMealSchema = new mongoose.Schema({
   },
   confidence: { type: Number, default: 0 },
   scannedAt: { type: Date, default: Date.now },
-  userID: { type: String, required: true },
   mealType: { type: String, enum: ["BREAKFAST", "LUNCH", "DINNER", "OTHER"], default: "OTHER" }
 }, { timestamps: true });
 
