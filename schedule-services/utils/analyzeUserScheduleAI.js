@@ -2,11 +2,18 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import axios from "axios";
+import NodeCache from "node-cache";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { getNutritionAI } from "./getNutritionAI.js";
 
 dotenv.config();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Cache: meal cache & GPT cache
+const mealCache = new NodeCache({ stdTTL: 300 }); // cache meal 5 phút
+const aiAdviceCache = new NodeCache({ stdTTL: 3600 }); // cache GPT 1h
 
 // 🥗 Đọc file datafood.json
 const __filename = fileURLToPath(import.meta.url);
@@ -14,14 +21,17 @@ const __dirname = path.dirname(__filename);
 const FOOD_DB_PATH = path.join(__dirname, "datafood.json");
 const FOOD_DB = JSON.parse(fs.readFileSync(FOOD_DB_PATH, "utf8"));
 
-// 🧂 Các món không lành mạnh nếu dùng làm bữa chính
+// URL Meal Service
+const MEAL_SERVICE_URL = process.env.MEAL_SERVICE_URL || "http://localhost:5002";
+
+// Món không lành mạnh
 const UNHEALTHY_FOODS = [
   "trà sữa", "nước ngọt", "coca", "pepsi", "snack", "bim bim",
   "khoai tây chiên", "hamburger", "pizza", "tokbokki", "mì cay",
   "gà rán", "bánh ngọt", "bánh kem", "kẹo", "nước tăng lực"
 ];
 
-// ✨ Chuẩn hoá văn bản bỏ dấu, bỏ số, bỏ đơn vị
+// Chuẩn hoá text (bỏ dấu, bỏ đơn vị)
 function normalizeText(text) {
   return text
     .toLowerCase()
@@ -33,43 +43,31 @@ function normalizeText(text) {
     .trim();
 }
 
-// 🔎 Hàm tìm món ăn gần đúng
+// Tìm món tương tự trong datafood.json
 function findFoodInDB(foodName) {
   const query = normalizeText(foodName);
-
   function stringSimilarity(a, b) {
     if (!a || !b) return 0;
-    a = a.split(" ");
-    b = b.split(" ");
-    const common = a.filter((w) => b.includes(w)).length;
-    const ratio = (2 * common) / (a.length + b.length);
-    return ratio;
+    const aw = a.split(" ");
+    const bw = b.split(" ");
+    const common = aw.filter((w) => bw.includes(w)).length;
+    return (2 * common) / (aw.length + bw.length);
   }
 
-  let bestMatch = null;
-  let bestScore = 0;
-
+  let best = null, bestScore = 0;
   for (const item of FOOD_DB) {
     const dbName = normalizeText(item.name);
     const sim = stringSimilarity(query, dbName);
     const samePrefix = dbName.startsWith(query.split(" ")[0]) ? 0.15 : 0;
-    const finalScore = sim + samePrefix;
+    const score = sim + samePrefix;
 
-    if (finalScore > bestScore && finalScore >= 0.4) {
-      bestScore = finalScore;
-      bestMatch = item;
+    if (score > bestScore && score >= 0.4) {
+      bestScore = score;
+      best = item;
     }
   }
 
-  if (bestMatch) {
-    console.log(
-      `🍜 Match [${foodName}] → ${bestMatch.name} (${bestMatch.calories} kcal) | score: ${(bestScore * 100).toFixed(0)}%`
-    );
-    return bestMatch;
-  }
-
-  console.warn(`⚠️ Không tìm thấy món [${foodName}] → dùng mặc định 200 kcal`);
-  return {
+  return best || {
     name: foodName,
     calories: 200,
     protein: 10,
@@ -79,53 +77,113 @@ function findFoodInDB(foodName) {
   };
 }
 
-// 🧠 Phân tích lịch ăn user
+// Tóm tắt danh sách món phổ biến
+function summarizeFoods(scannedFoods, top = 10) {
+  const list = Array.from(scannedFoods);
+  return list.length <= top ? list : list.slice(0, top);
+}
+
+// 🧠 Hàm chính
 export async function analyzeUserScheduleAI(userInfo, userSchedule) {
   try {
-    if (!userInfo || !userSchedule?.length)
-      throw new Error("Thiếu dữ liệu userInfo hoặc lịch ăn uống");
+    if (!userInfo || !userInfo.userId || !userSchedule?.length)
+      throw new Error("Thiếu userInfo, userId hoặc lịch ăn");
 
-    if (userSchedule.length > 7) {
+    if (userSchedule.length > 7)
       throw new Error("Giới hạn lịch ăn tối đa là 7 ngày.");
+
+    // 🔹 Cache key GPT
+    const cacheKey = crypto
+      .createHash("md5")
+      .update(JSON.stringify({ userInfo, userSchedule }))
+      .digest("hex");
+
+    if (aiAdviceCache.has(cacheKey)) {
+      console.log("⚡ Lấy lại kết quả từ cache GPT");
+      return aiAdviceCache.get(cacheKey);
     }
 
-    const nutrition = await getNutritionAI(userInfo);
-
-    let totalCalories = 0,
-      totalProtein = 0,
-      totalFat = 0,
-      totalCarbs = 0;
-    let unhealthyWarnings = [];
-    const scannedFoods = new Set();
-
-    for (const day of userSchedule) {
-      if (day.meals?.length > 5) {
-        console.warn(`⚠️ Ngày ${day.day} có hơn 5 bữa — bỏ qua các bữa dư.`);
-        day.meals = day.meals.slice(0, 5);
+    // 🔹 Lấy toàn bộ món đã scan của user 1 lần duy nhất
+    let scannedMeals = [];
+    try {
+      const res = await axios.get(`${MEAL_SERVICE_URL}/meals-scand/history`, {
+        params: { userId: userInfo.userId },
+      });
+      if (Array.isArray(res.data)) {
+        scannedMeals = res.data;
+        console.log(`📦 Lấy ${scannedMeals.length} món từ meal-service`);
+      } else {
+        console.warn("⚠️ Meal-service trả sai format:", res.data);
       }
+    } catch (err) {
+      console.warn("⚠️ Lỗi khi gọi Meal Service:", err.message);
+    }
 
+    const nutritionGoal = await getNutritionAI(userInfo);
+
+    let totalCalories = 0, totalProtein = 0, totalFat = 0, totalCarbs = 0;
+    const unhealthyWarnings = [];
+    const scannedFoods = new Set();
+    let foundCount = 0, fallbackCount = 0;
+    const foodCache = {}; // ⚡ cache session cho món ăn trùng
+
+    // 🔁 Xử lý từng ngày, từng bữa ăn
+    for (const day of userSchedule) {
       for (const meal of day.meals || []) {
         const mealType = meal.type?.toLowerCase() || "";
-        const foodItems = meal.name
-          .split(/,|và|\+|&/i)
-          .map((f) => f.trim())
-          .filter(Boolean);
+        const foodItems = meal.name.split(/,|và|\+|&/i).map((f) => f.trim()).filter(Boolean);
 
         for (const item of foodItems) {
-          let foodData = meal.nutrition?.[item] || findFoodInDB(item);
-          scannedFoods.add(foodData.name);
+          const normalizedQuery = normalizeText(item);
 
+          // ⚡ Dùng cache session nếu món đã được tính trước đó
+          if (foodCache[normalizedQuery]) {
+            const foodData = foodCache[normalizedQuery];
+            console.log(`⚡ Dùng cache session cho "${item}"`);
+            scannedFoods.add(item);
+            totalCalories += foodData.calories;
+            totalProtein += foodData.protein;
+            totalFat += foodData.fat;
+            totalCarbs += foodData.carbs;
+            continue;
+          }
+
+          // Tìm trong meal-service
+          const foundMeal = scannedMeals.find((m) => {
+            const normalizedFood = normalizeText(m.food_vi || "");
+            return (
+              normalizedFood.includes(normalizedQuery) ||
+              normalizedQuery.includes(normalizedFood)
+            );
+          });
+
+          let foodData;
+          if (foundMeal) {
+            foundCount++;
+            foodData = foundMeal.nutrition;
+            console.log(`✅ Tìm thấy món trong meal-service: "${item}" → ${foundMeal.food_vi}`);
+          } else {
+            fallbackCount++;
+            foodData = findFoodInDB(item);
+            console.log(`📖 Dùng dữ liệu từ datafood.json cho "${item}"`);
+          }
+
+          // Lưu cache session
+          foodCache[normalizedQuery] = foodData;
+
+          scannedFoods.add(item);
           totalCalories += foodData.calories;
           totalProtein += foodData.protein;
           totalFat += foodData.fat;
           totalCarbs += foodData.carbs;
 
+          // Cảnh báo món không lành mạnh
           const foundUnhealthy = UNHEALTHY_FOODS.find((u) =>
             item.toLowerCase().includes(u)
           );
           if (foundUnhealthy && ["sáng", "trưa", "tối"].includes(mealType)) {
             unhealthyWarnings.push(
-              `⚠️ Món "${foundUnhealthy}" xuất hiện trong bữa ${mealType} — không nên dùng làm bữa chính.`
+              `⚠️ Món "${foundUnhealthy}" trong bữa ${mealType} — không nên dùng làm bữa chính.`
             );
           }
         }
@@ -136,60 +194,35 @@ export async function analyzeUserScheduleAI(userInfo, userSchedule) {
     const avgProtein = totalProtein / userSchedule.length;
     const avgFat = totalFat / userSchedule.length;
     const avgCarbs = totalCarbs / userSchedule.length;
+    const topFoods = summarizeFoods(scannedFoods, 12);
 
-    console.log(
-      `📊 Trung bình/ngày: ${avgCalories.toFixed(0)} kcal | P:${avgProtein.toFixed(
-        1
-      )} | F:${avgFat.toFixed(1)} | C:${avgCarbs.toFixed(1)}`
-    );
-    console.log(`🍱 Món user đã dùng:`, [...scannedFoods]);
-    if (unhealthyWarnings.length > 0) {
-      console.log("🚫 Cảnh báo món không lành mạnh:", unhealthyWarnings);
-    }
+    console.log(`📊 Tổng món: ${foundCount + fallbackCount} | từ meal-service: ${foundCount} | fallback JSON: ${fallbackCount}`);
+    console.log("📈 TRUNG BÌNH / NGÀY:", { avgCalories, avgProtein, avgFat, avgCarbs });
+    console.log("🍽️ Món phổ biến:", topFoods);
 
-    // 🧠 Prompt hệ thống
+    // 🧠 GPT prompt
     const systemPrompt = `
-Bạn là chuyên gia dinh dưỡng tại Việt Nam.
-Hãy đánh giá xem chế độ ăn của người dùng có đạt mục tiêu không (tăng/giảm cân).
-Người dùng sẽ ăn theo lịch này lặp lại trong suốt thời gian mục tiêu.
-Nếu lịch này gần đạt nhưng chưa tối ưu, vẫn coi là "đạt" nhưng nêu rõ lý do.
-Tính thêm percentFinish (0-150) — dự đoán % hoàn thành mục tiêu.
-Nếu vượt mục tiêu (ăn dư calo hợp lý) → >100%.
-Nếu chưa đạt → dưới 100%.
-
-Trả về JSON dạng:
+Bạn là chuyên gia dinh dưỡng Việt Nam. 
+Đánh giá xem chế độ ăn có đạt mục tiêu không (tăng/giảm cân).
+Trả về JSON:
 {
-  "goalCheck": "đạt" hoặc "không đạt",
-  "percentFinish": số (0-150),
+  "goalCheck": "đạt" | "không đạt",
+  "percentFinish": number,
   "reason": "...",
-  "needToImprove": ["..."],
   "advice": "...",
   "mealSuggestion": ["..."]
 }
 `;
 
-    // 🧾 Prompt người dùng
     const userPrompt = `
 Người dùng: ${userInfo.gender}, ${userInfo.age} tuổi, ${userInfo.weight}kg, ${userInfo.height}cm
 Mục tiêu: ${userInfo.goal}, vận động ${userInfo.activity}
+TDEE: ${nutritionGoal.TDEE.toFixed(0)} kcal | Calories mục tiêu: ${nutritionGoal.calories.toFixed(0)} kcal
 
-Giả định: người dùng ăn lịch này lặp lại suốt ${userInfo.goal.match(/\d+/)?.[0] || 10} ngày.
-
-TDEE: ${nutrition.TDEE.toFixed(0)} kcal
-Calories mục tiêu: ${nutrition.calories.toFixed(0)} kcal
-
-Thực tế trung bình/ngày:
+Trung bình/ngày:
 Calories: ${avgCalories.toFixed(0)} kcal | Protein: ${avgProtein.toFixed(1)}g | Fat: ${avgFat.toFixed(1)}g | Carbs: ${avgCarbs.toFixed(1)}g
-
-${
-  unhealthyWarnings.length
-    ? `⚠️ Phát hiện món không phù hợp trong bữa chính:\n${unhealthyWarnings.join(
-        "\n"
-      )}`
-    : ""
-}
-
-Đưa ra đánh giá: đạt hay không, % hoàn thành mục tiêu, lời khuyên, và món thay thế.
+Các món phổ biến: ${topFoods.join(", ")}
+${unhealthyWarnings.length ? "⚠️ " + unhealthyWarnings.join("; ") : ""}
 `;
 
     const response = await client.chat.completions.create({
@@ -207,27 +240,24 @@ ${
     let result;
     try {
       result = JSON.parse(clean);
-      if (result.goalCheck && !["đạt", "không đạt"].includes(result.goalCheck.trim().toLowerCase())) {
-        const normalized = result.goalCheck.toLowerCase();
-        result.goalCheck = normalized.includes("không") ? "không đạt" : "đạt";
-      }
-      if (typeof result.percentFinish !== "number") {
-        // Ước tính dựa trên mức chênh lệch calo
-        const ratio = (avgCalories / nutrition.calories) * 100;
-        result.percentFinish = Math.round(ratio);
-      }
+      if (typeof result.percentFinish !== "number")
+        result.percentFinish = Math.round((avgCalories / nutritionGoal.calories) * 100);
+      if (!["đạt", "không đạt"].includes(result.goalCheck?.toLowerCase()))
+        result.goalCheck = result.goalCheck?.includes("không") ? "không đạt" : "đạt";
+      if (result.needToImprove) delete result.needToImprove;
     } catch {
       result = {
         goalCheck: "không đạt",
-        percentFinish: 0,
-        reason: "AI trả về sai định dạng JSON.",
-        needToImprove: [],
+        percentFinish: Math.round((avgCalories / nutritionGoal.calories) * 100),
+        reason: "AI trả sai JSON",
         advice: text,
         mealSuggestion: [],
       };
     }
 
-    return { step: "advice-only", advice: result };
+    const finalResult = { step: "advice-only", advice: result };
+    aiAdviceCache.set(cacheKey, finalResult); // lưu cache GPT
+    return finalResult;
   } catch (err) {
     console.error("❌ Lỗi analyzeUserScheduleAI:", err.message);
     throw new Error("AI không thể phân tích lịch ăn uống");
