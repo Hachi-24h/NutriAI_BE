@@ -21,7 +21,8 @@ const ScheduleSchema = new mongoose.Schema({
   shareWith: [{ type: String }],
   shareFrom: { type: String, default: null },
   status: { type: String, enum: ["draft", "active", "completed"], default: "active" },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+ private: { type: Boolean, required: true, default: true }// true là public, false là private
 });
 
 module.exports = mongoose.model("Schedule", ScheduleSchema);

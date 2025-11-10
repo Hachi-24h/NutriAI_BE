@@ -1,6 +1,6 @@
 const axios = require("axios");
 const Schedule = require("../models/Schedule");
-
+const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNutrition");
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
@@ -16,7 +16,8 @@ const createFullSchedule = async (req, res) => {
       duration,
       startDate,
       schedule,
-      nameSchedule
+      nameSchedule,
+      private: isPrivate = true // ✅ mặc định true nếu user không gửi
     } = req.body;
 
     const userId = req.auth?.id;
@@ -74,7 +75,8 @@ const createFullSchedule = async (req, res) => {
       weight,
       gender,
       age,
-      daily
+      daily,
+      private: isPrivate // ✅ thêm thuộc tính này
     });
 
     return res.status(201).json({
@@ -115,7 +117,8 @@ const getSchedulesByUser = async (req, res) => {
       status: s.status,
       startDate: s.startDate,
       endDate: s.endDate,
-      createdAt: s.createdAt
+      createdAt: s.createdAt,
+      private: s.private // ✅ thêm vào response
     }));
 
     return res.status(200).json({
@@ -172,6 +175,7 @@ const getFullSchedule = async (req, res) => {
       duration: schedule.daily.length,
       startDate: schedule.startDate,
       endDate: schedule.endDate,
+       private: schedule.private, // ✅ thêm ở đây
       fullPlan,
     });
   } catch (err) {
@@ -350,5 +354,31 @@ const getNextMealInCurrentSchedule = async (req, res) => {
   }
 };
 
+/**
+ * 🧮 Chuẩn hóa dữ liệu trước khi tạo schedule chính thức
+ *  - Thêm description mặc định
+ *  - Tính tổng dinh dưỡng CPFCa cho từng bữa
+ */
+ const enrichScheduleBeforeCreate = async (req, res) => {
+  try {
+    const inputData = req.body;
+    console.log("📥 Dữ liệu nhận vào:", inputData);
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule };
+    const finalSchedule = await prepareScheduleWithNutrition(inputData);
+
+    console.log("✅ Xử lý hoàn tất — Dữ liệu lịch chuẩn:");
+    res.status(200).json({
+      message: "Đã xử lý lịch với dinh dưỡng thành công ✅",
+      scheduleReady: finalSchedule,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi enrichScheduleBeforeCreate:", err);
+    res.status(500).json({
+      message: "Không thể xử lý dữ liệu trước khi tạo lịch",
+      error: err.message,
+    });
+  }
+};
+
+
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate };

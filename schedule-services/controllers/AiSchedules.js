@@ -2,6 +2,7 @@
 const { parseUserInfo } = require("../utils/parseUserInfo");
 const { getNutritionAI } = require("../utils/getNutritionAI");
 const { generateMealPlanAI } = require("../utils/generateMealPlanAI");
+const { analyzeUserScheduleAI } = require("../utils/analyzeUserScheduleAI");
 
 /**
  * ✅ Bước 1 — chỉ tính nutrition (AI phân tích mục tiêu + thời gian + bệnh lý)
@@ -63,4 +64,25 @@ const { generateMealPlanAI } = require("../utils/generateMealPlanAI");
     res.status(500).json({ error: err.message || "AI không thể tạo meal plan" });
   }
 };
-module.exports = { generateNutrition, generateMealPlan, generatePlan2Step };
+
+/*
+  đưa lời khuyên lịch 
+*/
+const getAiAdvice = async (req, res) => {
+  try {
+    const userInfo = { ...req.body.userInfo }; // giữ nguyên userId
+    const userSchedule = req.body.userSchedule;
+
+    const advice = await analyzeUserScheduleAI(userInfo, userSchedule);
+
+    res.json({
+      step: "advice-only",
+      advice
+    });
+  } catch (err) {
+    console.error("❌ Lỗi getAiAdvice:", err);
+    res.status(500).json({ message: err.message || "AI không thể đưa lời khuyên" });
+  }
+};
+
+module.exports = { generateNutrition, generateMealPlan, generatePlan2Step ,getAiAdvice};
