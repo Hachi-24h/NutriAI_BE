@@ -12,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use("/auth", require("./routes/authRoutes"));
+app.use("/internal", require("./routes/internalRoutes"));
 
 const PORT = process.env.PORT || 5006;
 app.listen(PORT, () => console.log(` ------Auth-Service running on port ${PORT}-------------\n`));

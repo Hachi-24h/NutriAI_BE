@@ -4,6 +4,7 @@ const foodController = require("../controllers/foodController");
 
 router.get("/search", foodController.searchFoodList);
 router.get("/detail", foodController.getFoodDetail);
-router.get("/featured", foodController.getFeaturedFoods); // 🆕 thêm dòng này
+router.get("/featured", foodController.getFeaturedFoods);
+router.get("/random", foodController.getRandomFoods);
 
 module.exports = router;
