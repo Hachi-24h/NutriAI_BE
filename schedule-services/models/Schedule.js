@@ -18,11 +18,15 @@ const ScheduleSchema = new mongoose.Schema({
   goal: { type: String },
   kgGoal: { type: Number },
   daily: { type: [DailyPlanSchema], required: true },
-  shareWith: [{ type: String }],
-  shareFrom: { type: String, default: null },
+
+  // 🧠 Nếu lịch này được tạo từ template chia sẻ
+  shareFrom: { type: String, default: null }, // ID user gốc
+
   status: { type: String, enum: ["draft", "active", "completed"], default: "active" },
   createdAt: { type: Date, default: Date.now },
- private: { type: Boolean, required: true, default: true }// true là public, false là private
+
+  // ✅ true = private, false = public/shared
+  private: { type: Boolean, required: true, default: true },
 });
 
 module.exports = mongoose.model("Schedule", ScheduleSchema);

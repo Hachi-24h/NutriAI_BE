@@ -5,11 +5,13 @@ const connectDB = require("./config/db");
 const http = require("http");
 const { Server } = require("socket.io");
 const friendController = require("./controllers/friendController");
+const requestLogger = require("./middlewares/requestLogger");
 dotenv.config();
 connectDB(); // <-- Kết nối database
 
 const app = express();
 app.use(cors());
+app.use(requestLogger("User-service")); // 👈 thêm dòng này
 app.use(express.json());
 
 // Routes
