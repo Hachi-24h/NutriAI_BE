@@ -91,3 +91,49 @@ export const getAllMealTemplatesByUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
+
+// 🔄 Chia sẻ template cho người dùng khá c
+export const shareTemplateWithUser = async (req, res) => {
+  try {
+    const { templateId, toUserId } = req.body;
+    const userId = req.auth?.id;
+
+    if (!userId || !toUserId || !templateId)
+      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
+
+    const template = await MealTemplate.findOne({ _id: templateId, userIdCreate: userId });
+    if (!template)
+      return res.status(404).json({ message: "Không tìm thấy template của user này" });
+
+    // 🔹 Thêm người nhận vào danh sách nếu chưa có
+    if (!template.sharedWith.includes(toUserId)) {
+      template.sharedWith.push(toUserId);
+      await template.save();
+    }
+
+    res.status(200).json({ message: "Đã gửi chia sẻ thành công ✅", template });
+  } catch (err) {
+    console.error("❌ Lỗi shareTemplateWithUser:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+// 📥 Lấy danh sách template được chia sẻ với user hiện tại
+export const getSharedTemplates = async (req, res) => {
+  try {
+    const userId = req.auth?.id;
+    const templates = await MealTemplate.find({ sharedWith: userId });
+
+    if (!templates.length)
+      return res.status(200).json({ message: "Không có template nào được chia sẻ với bạn" });
+
+    res.status(200).json({
+      message: "Lấy danh sách template được chia sẻ thành công ✅",
+      total: templates.length,
+      templates,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi getSharedTemplates:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};

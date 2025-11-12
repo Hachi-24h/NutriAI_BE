@@ -17,56 +17,55 @@ const createFullSchedule = async (req, res) => {
       startDate,
       schedule,
       nameSchedule,
-      private: isPrivate = true // ✅ mặc định true nếu user không gửi
+      private: isPrivate = true,
+      shareFrom = null, // 👈 nhận thêm nếu tạo từ shared template
+      idTemplate = null // 👈 nếu user dùng template có sẵn
     } = req.body;
 
     const userId = req.auth?.id;
     if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
+    if ((!schedule || schedule.length === 0) && !idTemplate)
+      return res.status(400).json({ message: "Thiếu dữ liệu schedule hoặc idTemplate" });
+    if (!startDate)
+      return res.status(400).json({ message: "Thiếu startDate" });
 
-    if (!schedule || schedule.length === 0 || !startDate)
-      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
+    let templateId = idTemplate;
 
-    // 1️⃣ Gọi meal-service để lưu template (token forwarding)
-    const mealRes = await axios.post(
-      "http://localhost:5002/meals-schedule/create-meal-templates",
+    // 🔹 Nếu không truyền idTemplate → tạo template mới từ meal-service
+    if (!idTemplate) {
+      const mealRes = await axios.post(
+        "http://localhost:5002/meals-schedule/create-meal-templates",
+        {
+          goal,
+          kgGoal,
+          duration,
+          BMIUser: Math.round(weight / ((height / 100) ** 2)),
+          schedule
+        },
+        { headers: { Authorization: req.headers.authorization } }
+      );
+      templateId = mealRes.data.template?._id;
+      if (!templateId)
+        return res.status(500).json({ message: "Không tạo được meal template" });
+    }
 
-
-      {
-        goal,
-        kgGoal,
-        duration,
-        BMIUser: Math.round(weight / ((height / 100) ** 2)),
-        schedule
-      },
-      {
-        headers: { Authorization: req.headers.authorization } // ✅ forward token
-      }
-    );
-
-    const template = mealRes.data.template;
-    if (!template || !template._id)
-      return res.status(500).json({ message: "Không tạo được meal template" });
-
-    // 2️⃣ Lấy lại chi tiết template từ meal-service
+    // 🔹 Lấy lại chi tiết template để build danh sách ngày ngẫu nhiên
     const { data: templateDetail } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${template._id}`,
-
-      { headers: { Authorization: req.headers.authorization } } // ✅ forward token
+      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+      { headers: { Authorization: req.headers.authorization } }
     );
 
     const templateDays = templateDetail.days.map((d) => d._id);
-
     const daily = Array.from({ length: duration }).map((_, i) => ({
       dayOrder: i + 1,
       idMealDay: templateDays[Math.floor(Math.random() * templateDays.length)]
     }));
 
-    // 3️⃣ Lưu Schedule
+    // 🔹 Lưu schedule mới
     const scheduleDoc = await Schedule.create({
       userId,
-      nameSchedule:
-        nameSchedule || `${goal || "Chế độ ăn"} ${new Date().toISOString().split("T")[0]}`,
-      idTemplate: template._id,
+      nameSchedule: nameSchedule || `${goal || "Chế độ ăn"} ${new Date().toISOString().split("T")[0]}`,
+      idTemplate: templateId,
       startDate,
       endDate: new Date(new Date(startDate).getTime() + duration * 24 * 60 * 60 * 1000),
       goal,
@@ -76,7 +75,8 @@ const createFullSchedule = async (req, res) => {
       gender,
       age,
       daily,
-      private: isPrivate // ✅ thêm thuộc tính này
+      shareFrom,
+      private: shareFrom ? false : isPrivate // 👈 nếu được chia sẻ thì là public
     });
 
     return res.status(201).json({
@@ -88,7 +88,6 @@ const createFullSchedule = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
-
 
 
 /**
@@ -380,5 +379,102 @@ const getNextMealInCurrentSchedule = async (req, res) => {
   }
 };
 
+// 🆕 Chia sẻ lịch cho user khác
+const shareScheduleToUser = async (req, res) => {
+  try {
+    const userId = req.auth?.id;
+    const { toUserId } = req.body;
+    const { scheduleId } = req.params;
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate };
+    if (!userId || !toUserId)
+      return res.status(400).json({ message: "Thiếu dữ liệu chia sẻ" });
+
+    const schedule = await Schedule.findOne({ _id: scheduleId, userId });
+    if (!schedule)
+      return res.status(404).json({ message: "Không tìm thấy lịch để chia sẻ" });
+
+    // 🔹 Gọi meal-service để thêm user được share
+    await axios.post(
+      "http://localhost:5002/meals-schedule/share-template",
+      { templateId: schedule.idTemplate, toUserId },
+      { headers: { Authorization: req.headers.authorization } }
+    );
+
+    // ⚡ Realtime gửi đến B
+    if (global._io) {
+      global._io.to(toUserId).emit("share_request", {
+        fromUser: userId,
+        templateId: schedule.idTemplate,
+        nameSchedule: schedule.nameSchedule,
+        message: "Bạn vừa nhận một template mới được chia sẻ 🎁",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Đã gửi yêu cầu chia sẻ thành công ✅",
+      sharedTemplate: schedule.idTemplate,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi shareScheduleToUser:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+// 🆕 Chấp nhận chia sẻ template và tạo lịch mới
+const acceptShareTemplate = async (req, res) => {
+  try {
+    const userId = req.auth?.id;
+    const { templateId, shareFrom, startDate, duration, nameSchedule } = req.body;
+
+    if (!userId || !templateId || !shareFrom)
+      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
+
+    // 🔹 Lấy template chi tiết từ meal-service
+    const { data: template } = await axios.get(
+      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+      { headers: { Authorization: req.headers.authorization } }
+    );
+
+    const templateDays = template.days.map((d) => d._id);
+    const daily = Array.from({ length: duration }).map((_, i) => ({
+      dayOrder: i + 1,
+      idMealDay: templateDays[Math.floor(Math.random() * templateDays.length)]
+    }));
+
+    // 🔹 Tạo lịch mới cho user B
+    const scheduleDoc = await Schedule.create({
+      userId,
+      nameSchedule: nameSchedule || `${template.goal || "Lịch chia sẻ"} từ ${shareFrom}`,
+      idTemplate: templateId,
+      startDate,
+      endDate: new Date(new Date(startDate).getTime() + duration * 24 * 60 * 60 * 1000),
+      goal: template.goal,
+      kgGoal: template.kgGoal,
+      daily,
+      shareFrom,
+      private: false
+    });
+
+    // ⚡ Gửi realtime về cho user A
+    if (global._io) {
+      global._io.to(shareFrom).emit("share_accepted", {
+        fromUser: userId,
+        scheduleId: scheduleDoc._id,
+        templateId,
+        message: "Người được chia sẻ đã tạo lịch mới từ template của bạn ✅",
+      });
+    }
+
+    return res.status(201).json({
+      message: "Tạo lịch mới từ template chia sẻ thành công ✅",
+      schedule: scheduleDoc,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi acceptShareTemplate:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+
+
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate ,shareScheduleToUser , acceptShareTemplate};
