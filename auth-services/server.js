@@ -13,5 +13,5 @@ app.use(requestLogger("Auth-service"));
 // Routes
 app.use("/auth", require("./routes/authRoutes"));
 
-const PORT = process.env.PORT || 5006;
+const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => console.log(` ------Auth-Service running on port ${PORT}-------------\n`));

@@ -4,9 +4,12 @@ module.exports = function requestLogger(serviceName) {
   return (req, res, next) => {
     res.on("finish", async () => {
       try {
-        const adminUrl =
-          process.env.ADMIN_LOG_URL || "http://localhost:5010/admin-log/increment";
-         
+        
+        // Chọn URL admin-service dựa trên môi trường
+        const adminUrl = (process.env.IS_DOCKER === 'true') ?
+          process.env.ADMIN_SERVICE_URL_DOCKER :
+          process.env.ADMIN_SERVICE_URL_LOCAL;
+          adminUrl= adminUrl + "/increment";  
         // Gửi dữ liệu sang admin-service
         const res = await axios.post(adminUrl, {
           service: serviceName,

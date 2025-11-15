@@ -32,5 +32,6 @@ router.post("/confirm-unlink", requireAuth, authCtrl.confirmUnlink);   // nhập
 router.get("/me", requireAuth, authCtrl.getMe);
 router.get("/check-login-methods", requireAuth, authCtrl.checkLoginMethods);
 router.post("/update-biometric", requireAuth, authCtrl.updateBiometric);
+router.get("/stats", authCtrl.stats);
 module.exports = router;
 

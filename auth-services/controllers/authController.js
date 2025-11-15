@@ -14,7 +14,10 @@ const REFRESH_TTL_DAYS = 30; // 30 ngày
 const axios = require('axios');
 const OtpCode = require("../models/OtpCode");
 
-const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL;
+const USER_SERVICE_BASE_URL = (process.env.IS_DOCKER === 'true') ?
+  process.env.USER_SERVICE_BASE_URL_DOCKER :
+  process.env.USER_SERVICE_BASE_URL_LOCAL;
+
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 const otpStore = {};
 const emailVerificationCodes = {};
@@ -908,5 +911,64 @@ exports.updateBiometric = async (req, res) => {
   } catch (err) {
     console.error("updateBiometric error:", err.message);
     return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// controllers/authController.js
+// (chèn ở cuối file hoặc chỗ phù hợp; file đã require Auth ở đầu file)
+exports.stats = async (req, res) => {
+  try {
+    // Facet: tính tổng, đếm theo số providers, đếm emailVerified nhưng không có provider google,
+    // và lấy 10 user mới nhất (chỉ trả về _id)
+    const agg = await Auth.aggregate([
+      {
+        $facet: {
+          total: [{ $count: "count" }],
+          byProviders: [
+            { $project: { providersCount: { $size: "$providers" } } },
+            { $group: { _id: "$providersCount", count: { $sum: 1 } } }
+          ],
+          emailVerifiedNotGoogle: [
+            // email đã xác thực nhưng trong providers không có type: "google"
+            { $match: { emailVerified: true, "providers.type": { $ne: "google" } } },
+            { $count: "count" }
+          ],
+          recent10: [
+            { $sort: { createdAt: -1 } },
+            { $limit: 10 },
+            { $project: { _id: 1 } }
+          ]
+        }
+      }
+    ]);
+
+    const data = agg[0] || {};
+
+    const total = (data.total && data.total[0] && data.total[0].count) || 0;
+
+    // map từ providers count -> số user
+    const providerCounts = {};
+    (data.byProviders || []).forEach(item => {
+      // item._id là số providers (0,1,2,...)
+      providerCounts[item._id] = item.count;
+    });
+
+    const usersWith1Method = providerCounts[1] || 0;
+    const usersWith2Methods = providerCounts[2] || 0;
+
+    const emailVerifiedNotGoogle = (data.emailVerifiedNotGoogle && data.emailVerifiedNotGoogle[0] && data.emailVerifiedNotGoogle[0].count) || 0;
+
+    const recentIds = (data.recent10 || []).map(d => d._id.toString());
+
+    return res.json({
+      totalAccounts: total,
+      usersWith1LoginMethod: usersWith1Method,
+      usersWith2LoginMethods: usersWith2Methods,
+      emailVerifiedButNotLinkedGoogle: emailVerifiedNotGoogle,
+      recent10Ids: recentIds
+    });
+  } catch (err) {
+    console.error("stats error:", err);
+    return res.status(500).json({ message: "Failed to get stats", error: err.message });
   }
 };

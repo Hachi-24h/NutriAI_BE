@@ -12,6 +12,6 @@ router.put("/update-health", requireAuth, userCtrl.updateUserHealth);
 
 router.patch("/update-avatar",requireAuth, upload.single("file"), userCtrl.uploadAndUpdateAvatar);
 
-
+router.get("/stats", userCtrl.getUserStats);
 
 module.exports = router;
