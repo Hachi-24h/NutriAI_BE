@@ -6,6 +6,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const friendController = require("./controllers/friendController");
 const requestLogger = require("./middlewares/requestLogger");
+const { getUserStats } = require("./controllers/userController");
 dotenv.config();
 connectDB(); // <-- Kết nối database
 
@@ -16,9 +17,13 @@ app.use(express.json());
 
 // Routes
 
+// ✅ Route /user/stats KHÔNG bị requireAuth
+app.get("/user/stats", getUserStats);
+
 app.use("/user", require("./routes/userRoutes"));
 const internalUsers = require('./routes/internalUsers');
 app.use('/friend', require('./routes/friendRouter'));
+
 app.use('/internal/users', internalUsers);
 const PORT = process.env.PORT || 5001;
 const server = http.createServer(app);

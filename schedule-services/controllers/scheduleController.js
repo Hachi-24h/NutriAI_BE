@@ -174,7 +174,7 @@ const getFullSchedule = async (req, res) => {
       duration: schedule.daily.length,
       startDate: schedule.startDate,
       endDate: schedule.endDate,
-       private: schedule.private, // ✅ thêm ở đây
+      private: schedule.private, // ✅ thêm ở đây
       fullPlan,
     });
   } catch (err) {
@@ -358,7 +358,7 @@ const getNextMealInCurrentSchedule = async (req, res) => {
  *  - Thêm description mặc định
  *  - Tính tổng dinh dưỡng CPFCa cho từng bữa
  */
- const enrichScheduleBeforeCreate = async (req, res) => {
+const enrichScheduleBeforeCreate = async (req, res) => {
   try {
     const inputData = req.body;
     console.log("📥 Dữ liệu nhận vào:", inputData);
@@ -476,5 +476,113 @@ const acceptShareTemplate = async (req, res) => {
 };
 
 
+// ==========================
+// 📊 Thống kê tổng quan Schedule
+// ==========================
+const getScheduleStatistics = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Chủ nhật đầu tuần
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate ,shareScheduleToUser , acceptShareTemplate};
+    const [totalByDay, totalByWeek, totalByMonth] = await Promise.all([
+      Schedule.countDocuments({ createdAt: { $gte: new Date(now.setHours(0, 0, 0, 0)) } }),
+      Schedule.countDocuments({ createdAt: { $gte: startOfWeek } }),
+      Schedule.countDocuments({ createdAt: { $gte: startOfMonth } })
+    ]);
+
+    const statusAgg = await Schedule.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    const goalsRaw = await Schedule.find({}, { goal: 1 });
+    const goalMap = { "giảm cân": 0, "tăng cân": 0, "duy trì": 0, "khác": 0 };
+
+    goalsRaw.forEach((g) => {
+      const goal = (g.goal || "").toLowerCase();
+
+      if (goal.includes("giảm")) goalMap["giảm cân"]++;
+      else if (goal.includes("tăng")) goalMap["tăng cân"]++;
+      else if (goal.includes("duy trì")) goalMap["duy trì"]++;
+      else goalMap["khác"]++;
+    });
+
+    const goalAgg = Object.entries(goalMap)
+      .filter(([_, count]) => count > 0)
+      .map(([key, count]) => ({ _id: key, count }));
+
+    const privacyAgg = await Schedule.aggregate([
+      { $group: { _id: "$private", count: { $sum: 1 } } }
+    ]);
+
+    const ageStats = await Schedule.aggregate([
+      { $match: { age: { $exists: true, $ne: null } } },
+      {
+        $group: {
+          _id: null,
+          avgAge: { $avg: "$age" },
+          ageDistribution: { $push: "$age" }
+        }
+      }
+    ]);
+
+    const avgDaysPerSchedule = await Schedule.aggregate([
+      { $project: { numDays: { $size: "$daily" } } },
+      { $group: { _id: null, avgDays: { $avg: "$numDays" } } }
+    ]);
+
+    const startedThisWeek = await Schedule.countDocuments({
+      startDate: { $gte: startOfWeek }
+    });
+    const startedThisMonth = await Schedule.countDocuments({
+      startDate: { $gte: startOfMonth }
+    });
+
+    const avgDurationAgg = await Schedule.aggregate([
+      {
+        $project: {
+          durationDays: {
+            $divide: [
+              { $subtract: ["$endDate", "$startDate"] },
+              1000 * 60 * 60 * 24
+            ]
+          }
+        }
+      },
+      { $group: { _id: null, avgDuration: { $avg: "$durationDays" } } }
+    ]);
+
+    return res.status(200).json({
+      message: "Thống kê Schedule thành công ✅",
+      totals: {
+        today: totalByDay,
+        thisWeek: totalByWeek,
+        thisMonth: totalByMonth
+      },
+      status: {
+        ratio: statusAgg,
+        counts: Object.fromEntries(statusAgg.map(s => [s._id, s.count]))
+      },
+      goals: goalAgg,
+      privacy: {
+        ratio: privacyAgg,
+        privateCount: privacyAgg.find(p => p._id === true)?.count || 0,
+        publicCount: privacyAgg.find(p => p._id === false)?.count || 0
+      },
+      age: {
+        average: ageStats[0]?.avgAge || 0,
+        distribution: ageStats[0]?.ageDistribution || []
+      },
+      avgDaysPerSchedule: avgDaysPerSchedule[0]?.avgDays || 0,
+      started: { thisWeek: startedThisWeek, thisMonth: startedThisMonth },
+      avgDuration: avgDurationAgg[0]?.avgDuration || 0
+    });
+  } catch (err) {
+    console.error("❌ Lỗi thống kê Schedule:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate, shareScheduleToUser, acceptShareTemplate, getScheduleStatistics };

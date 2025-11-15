@@ -143,11 +143,45 @@ const getResultByScheduleId = async (req, res) => {
   }
 };
 
+// ==========================
+// 📊 Thống kê tổng quan ScheduleResult
+// ==========================
+const getScheduleResultStatistics = async (req, res) => {
+  try {
+    const agg = await ScheduleResult.aggregate([
+      {
+        $group: {
+          _id: null,
+          avgCompletionRate: { $avg: { $divide: ["$daysCompleted", "$totalDays"] } },
+          avgGoalAchievedRate: { $avg: { $cond: ["$goalAchieved", 1, 0] } },
+          avgDifficulty: { $avg: "$feedback.difficultyLevel" },
+          avgAdherenceScore: { $avg: "$adherenceScore" }
+        }
+      }
+    ]);
+
+    const stats = agg[0] || {};
+
+    res.status(200).json({
+      message: "Thống kê ScheduleResult thành công ✅",
+      statistics: {
+        completionRate: (stats.avgCompletionRate || 0) * 100,
+        goalAchievedRate: (stats.avgGoalAchievedRate || 0) * 100,
+        difficultyAverage: stats.avgDifficulty || 0,
+        adherenceAverage: stats.avgAdherenceScore || 0
+      }
+    });
+  } catch (err) {
+    console.error("❌ Lỗi thống kê ScheduleResult:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
 
 module.exports = {
   submitScheduleResult,
   getResultsByUser,
   getResultById,
   deleteResult,
-  getResultByScheduleId
+  getResultByScheduleId,getScheduleResultStatistics
 };
