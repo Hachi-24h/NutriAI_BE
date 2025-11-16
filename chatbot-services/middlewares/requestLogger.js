@@ -1,20 +1,22 @@
-const axios = require("axios");
+import axios from "axios";
 
-module.exports = function requestLogger(serviceName) {
+export default function requestLogger(serviceName) {
   return (req, res, next) => {
     res.on("finish", async () => {
       try {
         // Chọn URL admin-service dựa trên môi trường
-        const adminUrl = (process.env.IS_DOCKER === 'true') ?
-          process.env.ADMIN_SERVICE_URL_DOCKER :
-          process.env.ADMIN_SERVICE_URL_LOCAL;
-          adminUrl= adminUrl + "/increment";         
+        let adminUrl =
+          process.env.IS_DOCKER === "true"
+            ? process.env.ADMIN_SERVICE_URL_DOCKER
+            : process.env.ADMIN_SERVICE_URL_LOCAL;
+
+        adminUrl = adminUrl + "/increment";
+
         // Gửi dữ liệu sang admin-service
-        const res = await axios.post(adminUrl, {
+        await axios.post(adminUrl, {
           service: serviceName,
-          api: req.originalUrl.split("?")[0] // chỉ lấy path, bỏ query string
+          api: req.originalUrl.split("?")[0], // chỉ lấy path
         });
-        // console.log(`[ -- ${serviceName} --] ✅ Gửi log thành công:`);
       } catch (err) {
         console.error(`[${serviceName}] ❌ Không gửi log được:`, err.message);
       }
@@ -22,4 +24,4 @@ module.exports = function requestLogger(serviceName) {
 
     next();
   };
-};
+}
