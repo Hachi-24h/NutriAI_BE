@@ -1,11 +1,23 @@
-// routes/adminStatsRoutes.js
-const express = require("express");
+// routes/adminRoutes.js
+const express = require('express');
 const router = express.Router();
-const statsCtrl = require("../controllers/adminController");
+const adminCtrl = require('../controllers/adminController');
+const adminStatsCtrl = require('../controllers/requestStatsController');
+router.post('/createAD', adminCtrl.createAdmin);
+router.get('/getAllAD', adminCtrl.getAllAdmins);
 
-router.get("/overview", statsCtrl.getOverview);
-router.get("/top-users", statsCtrl.getTopScanners);
-router.get("/scans/trend", statsCtrl.getScanTrend);
-router.get("/schedules/status", statsCtrl.getScheduleStatusStats);
+// 🟢 Ghi nhận request mới
+router.post("/increment", adminStatsCtrl.incrementRequestCount);
 
+// 📊 Lấy thống kê trong ngày
+router.get("/daily", adminStatsCtrl.getDailyStats);
+
+// 📅 Lấy thống kê 7 ngày gần nhất
+router.get("/weekly", adminStatsCtrl.getWeeklyStats);
+
+// 📊 Lấy thống kê tất cả dịch vụ
+router.get("/stats-all-services", adminStatsCtrl.getAllServiceStats);
+
+// 📊 Lấy thống kê từ log RequestStats
+router.get("/stats-log", adminStatsCtrl.getRequestLogsStats);
 module.exports = router;

@@ -8,7 +8,10 @@ const MealTemplateSchema = new mongoose.Schema({
   kgGoal: { type: Number },                                 // cân nặng mục tiêu
   maintainDuration: { type: Number, default: 7 },           // lịch duy trì trong bao lâu (ngày)
   BMIUser: { type: Number },                                // BMI của user
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  // 🆕 Thêm 2 field này
+  sharedWith: [{ type: String, default: [] }],  // danh sách user được chia sẻ
+  sharedBy: { type: String, default: null }     // ai là người chia sẻ
 });
 
 export default mongoose.model("MealTemplate", MealTemplateSchema);

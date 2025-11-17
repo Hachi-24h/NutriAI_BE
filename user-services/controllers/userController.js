@@ -190,3 +190,49 @@ exports.ensureUserProfile = async (req, res) => {
     res.status(500).json({ message: "Ensure user profile failed", error: err.message });
   }
 };
+
+// 📊 Thống kê tổng quan user
+exports.getUserStats = async (req, res) => {
+  try {
+    // 1️⃣ Tổng số user
+    const totalUsers = await User.countDocuments();
+
+    // 2️⃣ Đếm theo giới tính
+    const genderStats = await User.aggregate([
+      { $group: { _id: "$gender", count: { $sum: 1 } } }
+    ]);
+
+    // 3️⃣ Đếm BMI "đẹp" (18.5 <= BMI < 25)
+    const bmiStats = await User.aggregate([
+      {
+        $addFields: {
+          bmiNumeric: { $toDouble: "$BMI" } // ép kiểu chuỗi sang số
+        }
+      },
+      {
+        $match: {
+          bmiNumeric: { $gte: 18.5, $lt: 25 }
+        }
+      },
+      { $count: "count" }
+    ]);
+    const goodBMIUsers = bmiStats.length ? bmiStats[0].count : 0;
+
+    // 4️⃣ Đếm số lượng từng loại activityLevel
+    const activityStats = await User.aggregate([
+      { $group: { _id: "$activityLevel", count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json({
+      totalUsers,
+      genderStats,
+      goodBMIUsers,
+      activityStats
+    });
+  } catch (error) {
+    console.error("❌ getUserStats error:", error);
+    res.status(500).json({ message: "Lỗi khi lấy thống kê người dùng", error: error.message });
+  }
+};
+
