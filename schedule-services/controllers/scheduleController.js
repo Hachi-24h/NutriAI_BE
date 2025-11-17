@@ -1,6 +1,10 @@
 const axios = require("axios");
 const Schedule = require("../models/Schedule");
 const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNutrition");
+const  mealsApi = (process.env.IS_DOCKER === 'true') ?
+          process.env.MEAL_SERVICE_URL_DOCKER :
+          process.env.MEAL_SERVICE_URL_LOCAL;
+console.log("Meals API URL:", mealsApi);
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
@@ -34,7 +38,7 @@ const createFullSchedule = async (req, res) => {
     // 🔹 Nếu không truyền idTemplate → tạo template mới từ meal-service
     if (!idTemplate) {
       const mealRes = await axios.post(
-        "http://localhost:5002/meals-schedule/create-meal-templates",
+        `${mealsApi}/create-meal-templates`,
         {
           goal,
           kgGoal,
@@ -51,7 +55,7 @@ const createFullSchedule = async (req, res) => {
 
     // 🔹 Lấy lại chi tiết template để build danh sách ngày ngẫu nhiên
     const { data: templateDetail } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+      `${mealsApi}/get-meal-templates/${templateId}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -144,7 +148,7 @@ const getFullSchedule = async (req, res) => {
 
     // 🔹 Gọi meal-service để lấy chi tiết template
     const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
+      `${mealsApi}/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -203,7 +207,7 @@ const getNextMealInCurrentSchedule = async (req, res) => {
 
     // 🔹 2️⃣ Lấy chi tiết meal template (gồm meals)
     const { data: fullSchedule } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
+      `${mealsApi}/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -395,7 +399,7 @@ const shareScheduleToUser = async (req, res) => {
 
     // 🔹 Gọi meal-service để thêm user được share
     await axios.post(
-      "http://localhost:5002/meals-schedule/share-template",
+      `${mealsApi}/share-template`,
       { templateId: schedule.idTemplate, toUserId },
       { headers: { Authorization: req.headers.authorization } }
     );
@@ -431,7 +435,7 @@ const acceptShareTemplate = async (req, res) => {
 
     // 🔹 Lấy template chi tiết từ meal-service
     const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+      `${mealsApi}/get-meal-templates/${templateId}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 

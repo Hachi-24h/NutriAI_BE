@@ -1,1 +1,1 @@
-xin chào
+docker compose up --build

@@ -1,10 +1,10 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
+const OpenAI = require("openai").default;
+const dotenv = require("dotenv");
 dotenv.config();
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function generateMealPlanAI(userInfo, nutritionNeeds) {
+ async function generateMealPlanAI(userInfo, nutritionNeeds) {
   try {
     // 🧩 Chỉ giữ thông tin cần thiết
     const cleanUser = {
@@ -167,3 +167,5 @@ Yêu cầu:
     throw new Error("AI không thể tạo lịch ăn uống");
   }
 }
+
+module.exports = { generateMealPlanAI };

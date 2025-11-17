@@ -1,4 +1,4 @@
-export function parseUserInfo(body) {
+ function parseUserInfo(body) {
   return {
     goal: body.goal ? body.goal.toLowerCase().trim() : null,
     age: body.age ? Number(body.age) : null,
@@ -18,3 +18,4 @@ export function parseUserInfo(body) {
     day: body.day ? Number(body.day) : null,
   };
 }
+module.exports = { parseUserInfo };
