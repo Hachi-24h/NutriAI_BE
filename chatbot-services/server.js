@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
-const requestLogger = require("./middlewares/requestLogger");
+import requestLogger from "./middlewares/requestLogger.js";
 dotenv.config();
 
 const app = express();
