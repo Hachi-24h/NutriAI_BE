@@ -68,7 +68,7 @@ const { analyzeUserScheduleAI } = require("../utils/analyzeUserScheduleAI");
 /*
   đưa lời khuyên lịch 
 */
-const getAiAdvice = async (req, res) => {
+const getAiAdvice = async (req, res) => { 
   try {
     const userInfo = { ...req.body.userInfo }; // giữ nguyên userId
     const userSchedule = req.body.userSchedule;

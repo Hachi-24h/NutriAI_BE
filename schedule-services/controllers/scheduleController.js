@@ -89,8 +89,6 @@ const createFullSchedule = async (req, res) => {
   }
 };
 
-
-
 /**
  * 📋 Lấy danh sách lịch trình của user
  */

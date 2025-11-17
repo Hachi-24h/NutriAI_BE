@@ -118,7 +118,7 @@ export async function analyzeUserScheduleAI(userInfo, userSchedule) {
     } catch (err) {
       console.warn("⚠️ Lỗi khi gọi Meal Service:", err.message);
     }
-
+    console.log("🧩 Gọi meal-service với userId:", userInfo.userId);
     const nutritionGoal = await getNutritionAI(userInfo);
 
     let totalCalories = 0, totalProtein = 0, totalFat = 0, totalCarbs = 0;
