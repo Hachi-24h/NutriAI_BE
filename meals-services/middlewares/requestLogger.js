@@ -9,7 +9,7 @@ module.exports = function requestLogger(serviceName) {
           process.env.ADMIN_SERVICE_URL_DOCKER :
           process.env.ADMIN_SERVICE_URL_LOCAL;
           adminUrl= adminUrl + "/increment";
-          // console.log("Admin URL:", adminUrl);
+          console.log("Admin URL:", adminUrl);
         // Gửi dữ liệu sang admin-service
         const res = await axios.post(adminUrl, {
           service: serviceName,

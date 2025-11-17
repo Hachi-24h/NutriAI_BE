@@ -1,14 +1,16 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
-import axios from "axios";
-import NodeCache from "node-cache";
-import crypto from "crypto";
-import { fileURLToPath } from "url";
-import { getNutritionAI } from "./getNutritionAI.js";
+const OpenAI = require("openai").default;
+const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
+const axios = require("axios");
+const NodeCache = require("node-cache");
+const crypto = require("crypto");
+const { getNutritionAI } = require("./getNutritionAI.js");
 
 dotenv.config();
+
+
+
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Cache: meal cache & GPT cache
@@ -16,8 +18,7 @@ const mealCache = new NodeCache({ stdTTL: 300 }); // cache meal 5 phút
 const aiAdviceCache = new NodeCache({ stdTTL: 3600 }); // cache GPT 1h
 
 // 🥗 Đọc file datafood.json
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 const FOOD_DB_PATH = path.join(__dirname, "datafood.json");
 const FOOD_DB = JSON.parse(fs.readFileSync(FOOD_DB_PATH, "utf8"));
 
@@ -84,7 +85,7 @@ function summarizeFoods(scannedFoods, top = 10) {
 }
 
 // 🧠 Hàm chính
-export async function analyzeUserScheduleAI(userInfo, userSchedule) {
+async function analyzeUserScheduleAI(userInfo, userSchedule) {
   try {
     if (!userInfo || !userInfo.userId || !userSchedule?.length)
       throw new Error("Thiếu userInfo, userId hoặc lịch ăn");
@@ -263,3 +264,4 @@ ${unhealthyWarnings.length ? "⚠️ " + unhealthyWarnings.join("; ") : ""}
     throw new Error("AI không thể phân tích lịch ăn uống");
   }
 }
+module.exports = { analyzeUserScheduleAI };

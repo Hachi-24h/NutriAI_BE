@@ -1,11 +1,11 @@
-import axios from "axios";
-import FormData from "form-data";
-import fs from "fs";
+const axios = require("axios");
+const FormData = require("form-data");
+const fs = require("fs");
 
 const NUTRITIONIX_APP_ID = process.env.NUTRITIONIX_APP_ID;
 const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
 
-export const predictFood = async (imagePath) => {
+ const predictFood = async (imagePath) => {
   try {
     console.time("⏱️ Tổng thời gian predictFood");
 
@@ -88,3 +88,4 @@ export const predictFood = async (imagePath) => {
     return null;
   }
 };
+module.exports = { predictFood };

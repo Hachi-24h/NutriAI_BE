@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
+const OpenAI = require("openai").default;
+const dotenv = require("dotenv");
 dotenv.config();
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -28,7 +28,7 @@ function calculateTDEE(user) {
 /**
  * 🎯 Hàm chính: Tính toán toàn bộ chỉ số + nhờ AI viết notes
  */
-export async function getNutritionAI(userInfo) {
+ async function getNutritionAI(userInfo) {
   try {
     // 1️⃣ Tính BMR và TDEE
     const { BMR, TDEE, activityFactor } = calculateTDEE(userInfo);
@@ -129,3 +129,5 @@ Nhiệm vụ:
     throw new Error("Không thể tính nhu cầu dinh dưỡng");
   }
 }
+
+module.exports = { getNutritionAI };

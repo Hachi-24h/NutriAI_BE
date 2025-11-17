@@ -1,11 +1,12 @@
-import MealDay from "../models/MealDay.js";
-import MealTemplate from "../models/mealTemplate.js";
-import ScannedMeal from "../models/scannedMeal.js";
+
+const  MealDay  = require("../models/MealDay");
+const  MealTemplate  = require("../models/mealTemplate");
+const  ScannedMeal  = require("../models/scannedMeal");
 /**
  * 🥗 Tạo template ăn uống từ data mẫu (MealDay + MealTemplate)
  * ✅ Lấy userId từ token, không cần truyền qua body nữa
  */
-export const createMealTemplate = async (req, res) => {
+ const createMealTemplate = async (req, res) => {
   try {
     const { goal, kgGoal, duration, BMIUser, schedule } = req.body;
     const userId = req.auth?.id; // 🔐 Lấy từ token
@@ -49,7 +50,7 @@ export const createMealTemplate = async (req, res) => {
  * 🍽️ Lấy chi tiết template (bao gồm danh sách MealDay)
  * ✅ Giới hạn chỉ cho phép user xem template của chính họ
  */
-export const getMealTemplate = async (req, res) => {
+ const getMealTemplate = async (req, res) => {
   try {
     const userId = req.auth?.id;
     const template = await MealTemplate.findOne({
@@ -72,7 +73,7 @@ export const getMealTemplate = async (req, res) => {
 /**
  * 📋 Lấy danh sách tất cả MealTemplate của user hiện tại (từ token)
  */
-export const getAllMealTemplatesByUser = async (req, res) => {
+ const getAllMealTemplatesByUser = async (req, res) => {
   try {
     const userId = req.auth?.id;
     if (!userId) return res.status(401).json({ message: "Thiếu hoặc sai token xác thực" });
@@ -93,7 +94,7 @@ export const getAllMealTemplatesByUser = async (req, res) => {
 };
 
 // 🔄 Chia sẻ template cho người dùng khá c
-export const shareTemplateWithUser = async (req, res) => {
+ const shareTemplateWithUser = async (req, res) => {
   try {
     const { templateId, toUserId } = req.body;
     const userId = req.auth?.id;
@@ -119,7 +120,7 @@ export const shareTemplateWithUser = async (req, res) => {
 };
 
 // 📥 Lấy danh sách template được chia sẻ với user hiện tại
-export const getSharedTemplates = async (req, res) => {
+ const getSharedTemplates = async (req, res) => {
   try {
     const userId = req.auth?.id;
     const templates = await MealTemplate.find({ sharedWith: userId });
@@ -138,7 +139,7 @@ export const getSharedTemplates = async (req, res) => {
   }
 };
 
-export const getMealStats = async (req, res) => {
+ const getMealStats = async (req, res) => {
   try {
     // --- 1️⃣ Tổng số template ---
     const totalTemplates = await MealTemplate.countDocuments();
@@ -193,4 +194,14 @@ export const getMealStats = async (req, res) => {
     console.error("❌ getMealStats error:", error);
     return res.status(500).json({ message: "Lỗi khi lấy thống kê", error: error.message });
   }
+};
+
+
+module.exports = {
+  createMealTemplate,
+  getMealTemplate,
+  getAllMealTemplatesByUser,
+  shareTemplateWithUser,
+  getSharedTemplates,
+  getMealStats
 };
