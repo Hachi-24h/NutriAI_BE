@@ -1,4 +1,3 @@
-
 // controllers/adminController.js
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/admin');
