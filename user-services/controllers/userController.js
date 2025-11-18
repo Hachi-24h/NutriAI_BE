@@ -236,3 +236,19 @@ exports.getUserStats = async (req, res) => {
   }
 };
 
+// Lấy chi tiết 1 user khác bằng authId (truyền từ body)
+exports.getUserByAuthId = async (req, res) => {
+  try {
+    const { authId } = req.body;
+    if (!authId) return res.status(400).json({ message: "Missing authId" });
+
+    // ❌ Bỏ phần populate đi
+    const user = await User.findOne({ authId });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    console.error("❌ getUserByAuthId error:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};

@@ -73,6 +73,18 @@ services:
     networks:
       - backend
 
+  # ===================== FRIEND SERVICE ======================
+  friend-service:
+    build: ./friend-services
+    ports:
+      - "5006:5006"
+    env_file:
+      - ./friend-services/.env
+    depends_on:
+      - mongo
+    networks:
+      - backend
+      
   # ====================== MONGO DB ======================
   mongo:
     image: mongo:6
