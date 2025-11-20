@@ -14,4 +14,5 @@ router.post("/share/:scheduleId", requireAuth, ctrl.shareScheduleToUser);
 // 🆕 B chấp nhận share
 router.post("/accept-share", requireAuth, ctrl.acceptShareTemplate);
 
+
 module.exports = router;

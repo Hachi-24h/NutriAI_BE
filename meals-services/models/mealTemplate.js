@@ -9,7 +9,14 @@ const MealTemplateSchema = new mongoose.Schema({
   maintainDuration: { type: Number, default: 7 },
   BMIUser: { type: Number },
   createdAt: { type: Date, default: Date.now },
-  sharedWith: [{ type: String, default: [] }],
+  sharedWith: [
+    {
+      userId: { type: String, required: true },
+      status: { type: String, enum: ["pending", "accepted", "declined"], default: "pending" },
+      sharedAt: { type: Date, default: Date.now },
+      acceptedAt: { type: Date, default: null }
+    }
+  ],
   sharedBy: { type: String, default: null }
 });
 
