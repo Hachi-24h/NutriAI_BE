@@ -4,7 +4,7 @@ const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNu
 const mealsApi = (process.env.IS_DOCKER === 'true') ?
   process.env.MEAL_SERVICE_URL_DOCKER :
   process.env.MEAL_SERVICE_URL_LOCAL;
-console.log("Meals API URL:", mealsApi);
+
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
@@ -54,6 +54,7 @@ const createFullSchedule = async (req, res) => {
     }
 
     // 🔹 Lấy lại chi tiết template để build danh sách ngày ngẫu nhiên
+    
     const { data: templateDetail } = await axios.get(
       `${mealsApi}/get-meal-templates/${templateId}`,
       { headers: { Authorization: req.headers.authorization } }

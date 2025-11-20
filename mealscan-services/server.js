@@ -3,18 +3,17 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const requestLogger = require("./middlewares/requestLogger");
+
 dotenv.config();
 connectDB();
 
 const app = express();
 app.use(cors());
-app.use(requestLogger("Meals-service")); 
+app.use(requestLogger("MealScan-service"));
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
 
-// Routes
-app.use("/", require("./routes/mealsScheduleRoutes"));
+app.use("/", require("./routes/mealsScanRoutes"));
+app.use("/food", require("./routes/foodRoutes"));
 
-
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => console.log(`🚀 Meals Service running on port ${PORT}`));
+const PORT = process.env.PORT || 5007;
+app.listen(PORT, () => console.log(`🚀 MealScan Service running on port ${PORT}`));

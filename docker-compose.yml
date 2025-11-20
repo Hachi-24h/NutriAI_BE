@@ -1,104 +1,75 @@
 version: "3.9"
 
 services:
-  # ====================== USER SERVICE ======================
+  gateway:
+    build: ./gateway-services
+    container_name: gateway
+    ports:
+      - "5000:5000"
+    depends_on:
+      - user-service
+      - meal-service
+      - schedule-service
+      - chatbot-service
+      - auth-service
+      - friend-service
+      - admin-service
+    env_file:
+    - ./gateway-services/.env
+
+
   user-service:
     build: ./user-services
+    container_name: user-service
     ports:
       - "5001:5001"
-    env_file:
-      - ./user-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
 
-  # ====================== AUTH SERVICE ======================
-  auth-service:
-    build: ./auth-services
-    ports:
-      - "5005:5005"
-    env_file:
-      - ./auth-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
-
-  # ====================== SCHEDULE SERVICE ======================
-  schedule-service:
-    build: ./schedule-services
-    ports:
-      - "5003:5003"
-    env_file:
-      - ./schedule-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
-
-  # ====================== MEALS SERVICE ======================
-  meals-service:
+  meal-service:
     build: ./meals-services
+    container_name: meal-service
     ports:
       - "5002:5002"
-    env_file:
-      - ./meals-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
 
-  # ====================== CHATBOT SERVICE ======================
+  schedule-service:
+    build: ./schedule-services
+    container_name: schedule-service
+    ports:
+      - "5003:5003"
+
   chatbot-service:
     build: ./chatbot-services
+    container_name: chatbot-service
     ports:
       - "5004:5004"
-    env_file:
-      - ./chatbot-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
 
-  # ====================== ADMIN SERVICE ======================
-  admin-service:
-    build: ./admin-services
+  auth-service:
+    build: ./auth-services
+    container_name: auth-service
     ports:
-      - "5010:5010"
-    env_file:
-      - ./admin-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
+      - "5005:5005"
 
-  # ===================== FRIEND SERVICE ======================
   friend-service:
     build: ./friend-services
-    ports:
-      - "5006:5006"
+    container_name: friend-service
     env_file:
       - ./friend-services/.env
-    depends_on:
-      - mongo
-    networks:
-      - backend
-      
-  # ====================== MONGO DB ======================
-  mongo:
-    image: mongo:6
-    restart: always
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - backend
+      - "5006:5006"
+    depends_on:
+      - user-service
 
-# ====================== NETWORKS & VOLUMES ======================
-networks:
-  backend:
+  mealscan-service:
+    build: ./mealscan-services
+    container_name: mealscan-service
+    env_file:
+      - ./mealscan-services/.env
+    ports:
+      - "5007:5007"
+    depends_on:
+      - admin-service
 
-volumes:
-  mongo-data:
+  admin-service:
+    build: ./admin-services
+    container_name: admin-service
+    ports:
+      - "5010:5010"

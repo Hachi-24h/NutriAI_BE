@@ -1,5 +1,5 @@
 {
-  "name": "noti-services",
+  "name": "mealscan-services",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -10,9 +10,15 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google-cloud/translate": "^9.3.0",
+    "axios": "^1.13.2",
+    "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "mongoose": "^8.18.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.20.0",
+    "multer": "^2.0.2",
+    "node-cache": "^5.1.2"
   }
 }

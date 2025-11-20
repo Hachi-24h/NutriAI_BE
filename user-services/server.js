@@ -21,7 +21,7 @@ const server = http.createServer(app);
 // ✅ Route /user/stats KHÔNG bị requireAuth
 app.get("/user/stats", getUserStats);
 
-app.use("/user", require("./routes/userRoutes"));
+app.use("/", require("./routes/userRoutes"));
 const internalUsers = require('./routes/internalUsers');
 
 app.use('/internal/users', internalUsers);

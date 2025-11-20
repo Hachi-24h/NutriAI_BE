@@ -16,7 +16,7 @@ app.use(requestLogger("Friend-service"));
 app.use(express.json());
 
 // Routes
-app.use("/friend", require("./routes/friendRouter"));
+app.use("/", require("./routes/friendRouter"));
 
 const PORT = process.env.PORT || 5006; 
 

@@ -99,9 +99,79 @@ const getRecentScannedMeals = async (req, res) => {
   }
 };
 
+
+
+// 📊 Thống kê toàn bộ dữ liệu món scan
+const getGlobalScanStatistics = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    // ====== TÍNH TUẦN NÀY ======
+    const day = today.getDay(); // CN = 0
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() + diffToMonday);
+    weekStart.setHours(0, 0, 0, 0);
+
+    // Lấy tất cả meals trong tuần
+    const mealsThisWeek = await ScannedMeal.find({
+      createdAt: { $gte: weekStart, $lte: today }
+    });
+
+    const totalOfWeek = mealsThisWeek.length;
+
+    // AVG per day (luôn chia 7 ngày)
+    const avgPerDay = Number((totalOfWeek / 7).toFixed(2));
+
+    // ====== TÍNH THÁNG NÀY ======
+
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const mealsThisMonth = await ScannedMeal.find({
+      createdAt: { $gte: monthStart, $lte: today }
+    });
+
+    const totalOfMonth = mealsThisMonth.length;
+
+    // ===== 3 MÓN GẦN NHẤT =====
+    const recentMealsRaw = await ScannedMeal.find(
+      {},
+      "food_vi food_en nutrition image_url createdAt userId"
+    )
+      .sort({ createdAt: -1 })
+      .limit(3);
+
+    const recentMeals = recentMealsRaw.map((m) => ({
+      name_vi: m.food_vi,
+      name_en: m.food_en,
+      nutrition: m.nutrition,
+      image_url: m.image_url,
+      time: m.createdAt,
+      userId: m.userId
+    }));
+
+    // ====== RESPONSE ======
+    res.json({
+      message: "Thống kê thành công",
+      totalOfWeek,
+      totalOfMonth,
+      avgPerDay,
+      recentMeals
+    });
+
+  } catch (error) {
+    console.error("❌ getStats error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   analyzeMeal,
   saveScannedMeal,
   getScannedMeals,
   getRecentScannedMeals,
+  getGlobalScanStatistics
 };

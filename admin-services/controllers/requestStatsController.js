@@ -77,7 +77,9 @@ const getAllServiceStats = async (req, res) => {
       user: config.USER_SERVICE_URL,
       schedule: config.SCHEDULE_SERVICE_URL,
       scheduleResult: config.SCHEDULE_RESULT_SERVICE_URL,
-      meal: config.MEAL_SERVICE_URL
+      meal: config.MEAL_SERVICE_URL,
+      mealscan: config.MEAL_SCAN_SERVICE_URL,
+     
     };
 
     console.log("🔍 Bắt đầu gọi song song tới các service...");

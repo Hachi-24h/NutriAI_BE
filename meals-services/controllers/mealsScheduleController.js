@@ -1,7 +1,7 @@
 
 const MealDay = require("../models/MealDay");
 const MealTemplate = require("../models/mealTemplate");
-const ScannedMeal = require("../models/scannedMeal");
+
 /**
  * 🥗 Tạo template ăn uống từ data mẫu (MealDay + MealTemplate)
  * ✅ Lấy userId từ token, không cần truyền qua body nữa
@@ -268,27 +268,22 @@ const getMealStats = async (req, res) => {
       mostUsedDuration = maxItem ? maxItem._id : null;
     }
 
-    // --- 4️⃣ Tổng số món đã scan ---
-    const totalScannedMeals = await ScannedMeal.countDocuments();
+  
 
     // --- 5️⃣ Lấy 3 template mới nhất ---
     const latestTemplates = await MealTemplate.find({}, { _id: 1, userIdCreate: 1, description: 1 })
       .sort({ createdAt: -1 })
       .limit(3);
 
-    // --- 6️⃣ Lấy 3 món mới nhất được scan ---
-    const latestScans = await ScannedMeal.find({})
-      .sort({ createdAt: -1 })
-      .limit(3)
-      .lean();
+   
 
     return res.json({
       totalTemplates,
       templatesByDays,
       mostUsedDuration,
-      totalScannedMeals,
+    
       latestTemplates,
-      latestScans
+     
     });
   } catch (error) {
     console.error("❌ getMealStats error:", error);

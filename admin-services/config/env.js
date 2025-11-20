@@ -28,6 +28,14 @@ const config = {
   ADMIN_SERVICE_URL: isDocker
     ? process.env.ADMIN_SERVICE_URL_DOCKER
     : process.env.ADMIN_SERVICE_URL_LOCAL,
+  
+  FRIEND_SERVICE_URL: isDocker
+    ? process.env.FRIEND_SERVICE_URL_DOCKER
+    : process.env.FRIEND_SERVICE_URL_LOCAL,
+  
+  MEAL_SCAN_SERVICE_URL: isDocker
+    ? process.env.MEAL_SCAN_SERVICE_URL_DOCKER
+    : process.env.MEAL_SCAN_SERVICE_URL_LOCAL,
 };
 
 module.exports = config;

@@ -5,6 +5,7 @@ const {
   saveScannedMeal,
   getScannedMeals,
   getRecentScannedMeals,
+  getGlobalScanStatistics
 } = require("../controllers/mealsScanController");
 
 const router = express.Router();
@@ -14,5 +15,5 @@ router.post("/analyze", upload.single("file"), analyzeMeal);
 router.post("/save", saveScannedMeal);
 router.get("/history", getScannedMeals);
 router.get("/recent", getRecentScannedMeals);
-
+router.get("/stats", getGlobalScanStatistics);
 module.exports = router;

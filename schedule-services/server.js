@@ -23,10 +23,10 @@ app.use(express.json());
 
 // 📊 Stats routes
 app.get("/schedule-result/stats", getScheduleResultStatistics);
-app.use("/schedule/stats", getScheduleStatistics);
+app.use("/stats", getScheduleStatistics);
 
 // 🧭 Main routes
-app.use("/schedule", require("./routes/scheduleRoutes"));
+app.use("/", require("./routes/scheduleRoutes"));
 app.use("/Ai-schedule", require("./routes/AiSchedule"));
 app.use("/schedule-result", require("./routes/scheduleResultRoutes"));
 

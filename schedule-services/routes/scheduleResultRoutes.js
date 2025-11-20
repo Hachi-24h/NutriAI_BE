@@ -5,7 +5,7 @@ const ctrl = require("../controllers/scheduleResultController");
 const requireAuth = require("../middlewares/requireAuth");
 
 // 🧾 Gửi đánh giá sau khi hoàn thành lịch
-router.post("/submit/:scheduleId", requireAuth, ctrl.submitScheduleResult);
+router.post("/schedules-result/submit/:scheduleId", requireAuth, ctrl.submitScheduleResult);
 
 // 📋 Lấy toàn bộ đánh giá của user hiện tại
 router.get("/my-results", requireAuth, ctrl.getResultsByUser);
