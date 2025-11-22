@@ -30,6 +30,7 @@ app.use("/schedule/stats" ,getScheduleStatistics);
 
 app.use("/schedule", require("./routes/scheduleRoutes"));
 app.use("/Ai-schedule", require("./routes/AiSchedule"));
+app.use("/schedule-result", require("./routes/scheduleResultRoutes"));
 
 const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => console.log(`🚀 SCHEDULE-Service running on port ${PORT}`));

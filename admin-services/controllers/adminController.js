@@ -1,64 +1,71 @@
-// controllers/adminController.js
 const bcrypt = require('bcryptjs');
-const Admin = require('../models/admin');
+const axios = require("axios");
 
-/**
- * POST /admins
- * body: { email, displayName, password?, passwordHash?, authUserId?, role? }
- * - Ưu tiên dùng "password": server sẽ tự hash.
- * - Nếu đã có "passwordHash" thì có thể gửi thẳng (không khuyến nghị trong thực tế).
- * Trả về: 201 { admin }
- */
 exports.createAdmin = async (req, res) => {
   try {
-    let { email, displayName, password, passwordHash, authUserId, role } = req.body;
+    const { email, displayName, password } = req.body;
 
-    if (!email || !displayName) {
-      return res.status(400).json({ message: 'email & displayName are required' });
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    email = String(email).trim().toLowerCase();
+    // Gửi request sang auth-service để tạo admin
+    const authRes = await axios.post(
+      `${process.env.AUTH_SERVICE_URL_LOCAL}/admin-register`,
+      { 
+        email: normalizedEmail,
+        displayName,
+        password
+      }
+    );
 
-    // Kiểm tra trùng email
-    const existed = await Admin.findOne({ email });
-    if (existed) {
-      return res.status(409).json({ message: 'Email already exists' });
-    }
-
-    // Hash password nếu được gửi dưới dạng plain text
-    if (password) {
-      passwordHash = await bcrypt.hash(String(password), 10);
-    }
-
-    const doc = await Admin.create({
-      email,
-      displayName,
-      passwordHash,     // có thể undefined nếu bạn không yêu cầu mật khẩu
-      authUserId,
-      role
+    // Auth-service đã tạo user + gắn role = admin
+    return res.status(201).json({
+      message: "Admin created from auth-service",
+      user: authRes.data.user
     });
 
-    const plain = doc.toObject();
-    delete plain.passwordHash;
-
-    return res.status(201).json({ admin: plain });
   } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ message: 'Duplicate key (likely email)' });
-    }
-    return res.status(400).json({ message: 'Create admin failed', error: err.message });
+    return res.status(500).json({
+      message: "Create admin failed",
+      error: err.message
+    });
   }
 };
 
-/**
- * GET /admins
- * Trả về danh sách admin (ẩn passwordHash)
- */
+// 🟦 Lấy danh sách Admin
 exports.getAllAdmins = async (req, res) => {
   try {
-    const docs = await Admin.find().select('-passwordHash').sort('-createdAt');
-    return res.json(docs);
+    // Gọi sang auth-service để lấy những user có role = admin
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL_LOCAL}/admins`);
+
+    return res.json({ admins: response.data.users });
+
   } catch (err) {
-    return res.status(500).json({ message: 'List admins failed', error: err.message });
+    return res.status(500).json({
+      message: "Get admins failed",
+      error: err.message,
+    });
+  }
+};
+
+// 🗑 Xóa Admin theo ID
+exports.deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Gọi sang auth-service để xoá user
+    const result = await axios.delete(
+      `${process.env.AUTH_SERVICE_URL_LOCAL}/auth/admin/${id}`
+    );
+
+    return res.json({
+      message: "Admin deleted successfully",
+      result: result.data
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      message: "Delete admin failed",
+      error: err.response?.data?.error || err.message
+    });
   }
 };

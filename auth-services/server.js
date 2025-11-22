@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use(requestLogger("Auth-service"));
 // Routes
+
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/internal", require("./routes/internalRoutes"));
 
