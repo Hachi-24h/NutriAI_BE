@@ -291,6 +291,45 @@ const getMealStats = async (req, res) => {
   }
 };
 
+/**
+ * ❌ Xoá MealTemplate + toàn bộ MealDay liên quan theo scheduleId (templateId)
+ */
+const deleteMealTemplateByScheduleId = async (req, res) => {
+  try {
+    const userId = req.auth?.id;
+    const { templateID } = req.params;
+
+    if (!templateID)
+      return res.status(400).json({ message: "Thiếu templateID" });
+
+    // 1️⃣ Tìm template theo templateID
+    const template = await MealTemplate.findOne({
+      _id: templateID,
+      userIdCreate: userId
+    });
+     
+  
+    if (!template)
+      return res.status(404).json({ message: "Không tìm thấy template của user này" });
+
+    // 2️⃣ Lấy danh sách các MealDay ID bên trong template
+    const dayIds = template.dayTemplate;
+
+    // 3️⃣ Xoá từng MealDay
+    await MealDay.deleteMany({ _id: { $in: dayIds } });
+
+    // 4️⃣ Xoá template chính
+    await MealTemplate.deleteOne({ _id: scheduleId });
+
+    return res.status(200).json({
+      message: "Xoá template và toàn bộ MealDay liên quan thành công ✅",
+      deletedDays: dayIds.length
+    });
+  } catch (err) {
+    console.error("❌ Lỗi deleteMealTemplateByScheduleId:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
 
 module.exports = {
   createMealTemplate,
@@ -298,5 +337,6 @@ module.exports = {
   getAllMealTemplatesByUser,
   shareTemplateWithUser,
   getSharedTemplates,
-  getMealStats, acceptShare, declineShare
+  getMealStats, acceptShare, declineShare ,
+  deleteMealTemplateByScheduleId,
 };
