@@ -206,11 +206,34 @@ const getScheduleResultStatistics = async (req, res) => {
   }
 };
 
+const deleteResultsByScheduleId = async (req, res) => {
+  try {
+    const userId = req.auth.id;
+    const { scheduleId } = req.params;
+
+    if (!scheduleId) {
+      return res.status(400).json({ message: "Thiếu scheduleId" });
+    }
+
+    // Xoá toàn bộ kết quả của user đối với schedule này
+    const deleted = await ScheduleResult.deleteMany({ scheduleId, userId });
+
+    return res.status(200).json({
+      message: "Xoá toàn bộ kết quả đánh giá của scheduleId thành công ✅",
+      deletedCount: deleted.deletedCount
+    });
+
+  } catch (err) {
+    console.error("❌ deleteResultsByScheduleId:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
 
 module.exports = {
   submitScheduleResult,
   getResultsByUser,
   getResultById,
   deleteResult,
-  getResultByScheduleId,getScheduleResultStatistics
+  getResultByScheduleId, getScheduleResultStatistics, 
+  deleteResultsByScheduleId
 };

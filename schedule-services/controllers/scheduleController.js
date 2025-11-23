@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Schedule = require("../models/Schedule");
 const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNutrition");
+const ScheduleResult = require("../models/ScheduleResult");
 const mealsApi = (process.env.IS_DOCKER === 'true') ?
   process.env.MEAL_SERVICE_URL_DOCKER :
   process.env.MEAL_SERVICE_URL_LOCAL;
@@ -385,101 +386,45 @@ const enrichScheduleBeforeCreate = async (req, res) => {
   }
 };
 
+/**
+ * ❌ Xoá 1 lịch trình:
+ * - Gọi meal-service xoá template (KHÔNG bắt buộc phải thành công)
+ * - Gọi schedule-result-service xoá kết quả đánh giá (KHÔNG bắt buộc phải thành công)
+ * - Sau đó xoá schedule (BẮT BUỘC thành công)
+ */
 
-// 🆕 Chia sẻ lịch cho user khác
-const shareScheduleToUser = async (req, res) => {
+const deleteSchedule = async (req, res) => {
   try {
-    const userId = req.auth?.id;
-    const { toUserId } = req.body;
+    const userId = req.auth.id;
     const { scheduleId } = req.params;
-    if (toUserId === userId) {
-      return res.status(400).json({
-        message: "Bạn không thể chia sẻ lịch cho chính mình 😅"
-      });
+
+    if (!scheduleId) {
+      return res.status(400).json({ message: "Thiếu scheduleId" });
     }
-    if (!userId || !toUserId)
-      return res.status(400).json({ message: "Thiếu dữ liệu chia sẻ" });
 
+    // 1️⃣ Kiểm tra schedule có tồn tại không
     const schedule = await Schedule.findOne({ _id: scheduleId, userId });
-    if (!schedule)
-      return res.status(404).json({ message: "Không tìm thấy lịch để chia sẻ" });
+    if (!schedule) {
+      return res.status(404).json({ message: "Không tìm thấy lịch để xoá" });
+    }
 
-    // 🔹 Gọi meal-service để thêm user được share ở trạng thái pending
-    const { data } = await axios.post(
-      `${mealsApi}/share-template`,
-      {
-        templateId: schedule.idTemplate,
-        toUserId,
-        status: "pending"
-      },
-      { headers: { Authorization: req.headers.authorization } }
-    );
+    // 2️⃣ Xoá toàn bộ ScheduleResult cùng scheduleId
+    const deletedResults = await ScheduleResult.deleteMany({ scheduleId });
+
+    // 3️⃣ Xoá Schedule chính
+    await Schedule.deleteOne({ _id: scheduleId });
 
     return res.status(200).json({
-      message: "Đã gửi yêu cầu chia sẻ thành công ✅",
-      sharedTemplate: schedule.idTemplate,
-      result: data
+      message: "Đã xoá lịch và toàn bộ đánh giá liên quan thành công ✅",
+      deleted: {
+        scheduleId,
+        scheduleResultDeleted: deletedResults.deletedCount
+      }
     });
+
   } catch (err) {
-    console.error("❌ Lỗi shareScheduleToUser:", err);
-    res.status(500).json({ message: "Lỗi server", error: err.message });
-  }
-};
-
-
-// 🆕 Chấp nhận chia sẻ template và tạo lịch mới
-const acceptShareTemplate = async (req, res) => {
-  try {
-    const userId = req.auth?.id;
-    const { templateId, shareFrom, startDate, nameSchedule } = req.body;
-
-    if (!userId || !templateId || !shareFrom)
-      return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
-
-    // 🔹 Gọi meal-service để cập nhật trạng thái accepted
-    const { data: acceptRes } = await axios.post(
-      `${mealsApi}/accept-share`,
-      { templateId, shareFrom },
-      { headers: { Authorization: req.headers.authorization } }
-    );
-
-    if (acceptRes.status !== "ok")
-      return res.status(403).json({ message: "Bạn không được phép chấp nhận chia sẻ này" });
-
-    // 🔹 Lấy chi tiết template
-    const { data: template } = await axios.get(
-      `${mealsApi}/get-meal-templates/${templateId}`,
-      { headers: { Authorization: req.headers.authorization } }
-    );
-
-    const duration = template.maintainDuration || 7; // ✅ dùng duration gốc từ template
-    const templateDays = template.days.map((d) => d._id);
-
-    const daily = Array.from({ length: duration }).map((_, i) => ({
-      dayOrder: i + 1,
-      idMealDay: templateDays[Math.floor(Math.random() * templateDays.length)]
-    }));
-
-    const scheduleDoc = await Schedule.create({
-      userId,
-      nameSchedule: nameSchedule || `${template.goal || "Lịch chia sẻ"} từ ${shareFrom}`,
-      idTemplate: templateId,
-      startDate,
-      endDate: new Date(new Date(startDate).getTime() + duration * 24 * 60 * 60 * 1000),
-      goal: template.goal,
-      kgGoal: template.kgGoal,
-      daily,
-      shareFrom,
-      private: false
-    });
-
-    return res.status(201).json({
-      message: "Tạo lịch mới từ template chia sẻ thành công ✅",
-      schedule: scheduleDoc,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi acceptShareTemplate:", err);
-    res.status(500).json({ message: "Lỗi server", error: err.message });
+    console.error("❌ deleteSchedule:", err);
+    return res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 
@@ -594,4 +539,4 @@ const getScheduleStatistics = async (req, res) => {
 };
 
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate, shareScheduleToUser, acceptShareTemplate, getScheduleStatistics };
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate, deleteSchedule, getScheduleStatistics };

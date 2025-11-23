@@ -19,8 +19,6 @@ router.delete("/:id", requireAuth, ctrl.deleteResult);
 // 🧭 Lấy kết quả đánh giá theo scheduleId
 router.post("/by-schedule", requireAuth, ctrl.getResultByScheduleId);
 
-console.log("Route /schedule-result loaded");
-
-
+router.delete("/deteleResult/:scheduleId", requireAuth, ctrl.deleteResultsByScheduleId);
 
 module.exports = router;
