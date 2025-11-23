@@ -2,7 +2,7 @@
 const { parseUserInfo } = require("../utils/parseUserInfo");
 const { getNutritionAI } = require("../utils/getNutritionAI");
 const { generateMealPlanAI } = require("../utils/generateMealPlanAI");
-const { analyzeUserScheduleAI } = require("../utils/analyzeUserScheduleAI");
+const { analyzeUserScheduleAI } = require("../utils/analyzeUserScheduleAI.cjs");
 
 /**
  * ✅ Bước 1 — chỉ tính nutrition (AI phân tích mục tiêu + thời gian + bệnh lý)

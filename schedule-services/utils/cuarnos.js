@@ -1,6 +1,6 @@
 // utils/cuarnos.js
-import OpenAI from "openai";
-import dotenv from "dotenv";
+const OpenAI = require("openai").default;
+const dotenv = require("dotenv");
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ const client = new OpenAI({
  * @param {string} info - mô tả yêu cầu (vd: "3 bữa/ngày, ăn ít dầu mỡ")
  * @returns {Promise<Object>} JSON lịch ăn uống
  */
-export async function cuarnos(info) {
+ async function cuarnos(info) {
   try {
     const schema = {
       type: "object",
@@ -69,3 +69,4 @@ export async function cuarnos(info) {
     throw err;
   }
 }
+module.exports = { cuarnos };

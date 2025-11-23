@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/admin", require("./routes/adminRoutes"));
+app.use("/", require("./routes/adminRoutes"));
 
 const PORT = process.env.PORT || 5010;
 app.listen(PORT, () => console.log(`🚀 Admin Service running on port ${PORT}`));

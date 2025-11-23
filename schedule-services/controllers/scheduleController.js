@@ -1,6 +1,10 @@
 const axios = require("axios");
 const Schedule = require("../models/Schedule");
 const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNutrition");
+const mealsApi = (process.env.IS_DOCKER === 'true') ?
+  process.env.MEAL_SERVICE_URL_DOCKER :
+  process.env.MEAL_SERVICE_URL_LOCAL;
+
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
  */
@@ -34,7 +38,7 @@ const createFullSchedule = async (req, res) => {
     // 🔹 Nếu không truyền idTemplate → tạo template mới từ meal-service
     if (!idTemplate) {
       const mealRes = await axios.post(
-        "http://localhost:5002/meals-schedule/create-meal-templates",
+        `${mealsApi}/create-meal-templates`,
         {
           goal,
           kgGoal,
@@ -50,8 +54,9 @@ const createFullSchedule = async (req, res) => {
     }
 
     // 🔹 Lấy lại chi tiết template để build danh sách ngày ngẫu nhiên
+    
     const { data: templateDetail } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+      `${mealsApi}/get-meal-templates/${templateId}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -145,7 +150,7 @@ const getFullSchedule = async (req, res) => {
 
     // 🔹 Gọi meal-service để lấy chi tiết template
     const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
+      `${mealsApi}/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -204,7 +209,7 @@ const getNextMealInCurrentSchedule = async (req, res) => {
 
     // 🔹 2️⃣ Lấy chi tiết meal template (gồm meals)
     const { data: fullSchedule } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${schedule.idTemplate}`,
+      `${mealsApi}/get-meal-templates/${schedule.idTemplate}`,
       { headers: { Authorization: req.headers.authorization } }
     );
 
@@ -380,13 +385,18 @@ const enrichScheduleBeforeCreate = async (req, res) => {
   }
 };
 
+
 // 🆕 Chia sẻ lịch cho user khác
 const shareScheduleToUser = async (req, res) => {
   try {
     const userId = req.auth?.id;
     const { toUserId } = req.body;
     const { scheduleId } = req.params;
-
+    if (toUserId === userId) {
+      return res.status(400).json({
+        message: "Bạn không thể chia sẻ lịch cho chính mình 😅"
+      });
+    }
     if (!userId || !toUserId)
       return res.status(400).json({ message: "Thiếu dữ liệu chia sẻ" });
 
@@ -394,26 +404,21 @@ const shareScheduleToUser = async (req, res) => {
     if (!schedule)
       return res.status(404).json({ message: "Không tìm thấy lịch để chia sẻ" });
 
-    // 🔹 Gọi meal-service để thêm user được share
-    await axios.post(
-      "http://localhost:5002/meals-schedule/share-template",
-      { templateId: schedule.idTemplate, toUserId },
+    // 🔹 Gọi meal-service để thêm user được share ở trạng thái pending
+    const { data } = await axios.post(
+      `${mealsApi}/share-template`,
+      {
+        templateId: schedule.idTemplate,
+        toUserId,
+        status: "pending"
+      },
       { headers: { Authorization: req.headers.authorization } }
     );
-
-    // ⚡ Realtime gửi đến B
-    if (global._io) {
-      global._io.to(toUserId).emit("share_request", {
-        fromUser: userId,
-        templateId: schedule.idTemplate,
-        nameSchedule: schedule.nameSchedule,
-        message: "Bạn vừa nhận một template mới được chia sẻ 🎁",
-      });
-    }
 
     return res.status(200).json({
       message: "Đã gửi yêu cầu chia sẻ thành công ✅",
       sharedTemplate: schedule.idTemplate,
+      result: data
     });
   } catch (err) {
     console.error("❌ Lỗi shareScheduleToUser:", err);
@@ -421,28 +426,40 @@ const shareScheduleToUser = async (req, res) => {
   }
 };
 
+
 // 🆕 Chấp nhận chia sẻ template và tạo lịch mới
 const acceptShareTemplate = async (req, res) => {
   try {
     const userId = req.auth?.id;
-    const { templateId, shareFrom, startDate, duration, nameSchedule } = req.body;
+    const { templateId, shareFrom, startDate, nameSchedule } = req.body;
 
     if (!userId || !templateId || !shareFrom)
       return res.status(400).json({ message: "Thiếu dữ liệu cần thiết" });
 
-    // 🔹 Lấy template chi tiết từ meal-service
-    const { data: template } = await axios.get(
-      `http://localhost:5002/meals-schedule/get-meal-templates/${templateId}`,
+    // 🔹 Gọi meal-service để cập nhật trạng thái accepted
+    const { data: acceptRes } = await axios.post(
+      `${mealsApi}/accept-share`,
+      { templateId, shareFrom },
       { headers: { Authorization: req.headers.authorization } }
     );
 
+    if (acceptRes.status !== "ok")
+      return res.status(403).json({ message: "Bạn không được phép chấp nhận chia sẻ này" });
+
+    // 🔹 Lấy chi tiết template
+    const { data: template } = await axios.get(
+      `${mealsApi}/get-meal-templates/${templateId}`,
+      { headers: { Authorization: req.headers.authorization } }
+    );
+
+    const duration = template.maintainDuration || 7; // ✅ dùng duration gốc từ template
     const templateDays = template.days.map((d) => d._id);
+
     const daily = Array.from({ length: duration }).map((_, i) => ({
       dayOrder: i + 1,
       idMealDay: templateDays[Math.floor(Math.random() * templateDays.length)]
     }));
 
-    // 🔹 Tạo lịch mới cho user B
     const scheduleDoc = await Schedule.create({
       userId,
       nameSchedule: nameSchedule || `${template.goal || "Lịch chia sẻ"} từ ${shareFrom}`,
@@ -456,16 +473,6 @@ const acceptShareTemplate = async (req, res) => {
       private: false
     });
 
-    // ⚡ Gửi realtime về cho user A
-    if (global._io) {
-      global._io.to(shareFrom).emit("share_accepted", {
-        fromUser: userId,
-        scheduleId: scheduleDoc._id,
-        templateId,
-        message: "Người được chia sẻ đã tạo lịch mới từ template của bạn ✅",
-      });
-    }
-
     return res.status(201).json({
       message: "Tạo lịch mới từ template chia sẻ thành công ✅",
       schedule: scheduleDoc,
@@ -475,6 +482,7 @@ const acceptShareTemplate = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
+
 
 
 // ==========================

@@ -1,10 +1,10 @@
-import axios from "axios";
-import dotenv from "dotenv";
+const axios = require("axios");
+const dotenv = require("dotenv");
 dotenv.config();
 
 const API_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
-export async function getFoodNutrition(foodName) {
+ async function getFoodNutrition(foodName) {
   try {
     const res = await axios.post(
       API_URL,
@@ -38,3 +38,5 @@ export async function getFoodNutrition(foodName) {
     };
   }
 }
+
+module.exports = { getFoodNutrition };
