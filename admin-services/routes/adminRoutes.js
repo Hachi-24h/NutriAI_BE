@@ -3,8 +3,9 @@ const express = require('express');
 const router = express.Router();
 const adminCtrl = require('../controllers/adminController');
 const adminStatsCtrl = require('../controllers/requestStatsController');
-router.post('/createAD', adminCtrl.createAdmin);
-router.get('/getAllAD', adminCtrl.getAllAdmins);
+// --- ADMIN AUTH ---
+router.get("/admins", adminCtrl.getAllAdmins);
+router.delete('/deleteAD/:id', adminCtrl.deleteAdmin);   // 🟢 Thêm route xoá admin
 
 // 🟢 Ghi nhận request mới
 router.post("/increment", adminStatsCtrl.incrementRequestCount);
