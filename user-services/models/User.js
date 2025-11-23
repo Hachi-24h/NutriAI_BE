@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
+  authId: { type: String, required: true }, // 👈 sửa thành String
   fullname: { type: String, required: true },
-  gender: { type: String, required: true },
+  gender: { type: String, enum: ['MALE', 'FEMALE', 'OTHER'], default: 'OTHER' },
   DOB: { type: Date, required: true },
   height: { type: String },
   weight: { type: String },
   BMI: { type: String },
-  activityLevel: { type: Number }
-}, { timestamps: true });  // tự động thêm createdAt, updatedAt
+  activityLevel: { type: Number },
+  avt: { type: String } // 👈 thêm trường avatar
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", UserSchema);

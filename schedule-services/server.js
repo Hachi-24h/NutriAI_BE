@@ -1,0 +1,37 @@
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectDB = require("./config/db");
+const requestLogger = require("./middlewares/requestLogger");
+dotenv.config();
+
+const { getScheduleStatistics } = require("./controllers/scheduleController");
+const { getScheduleResultStatistics } = require("./controllers/scheduleResultController");
+
+connectDB();
+
+const app = express();
+
+// Middleware
+app.use(requestLogger("schedule-service"));
+app.use(cors());
+app.use(express.json());
+
+// =====================
+// ROUTES
+// =====================
+
+// 📊 Stats routes
+app.get("/schedule-result/stats", getScheduleResultStatistics);
+app.use("/stats", getScheduleStatistics);
+
+// 🧭 Main routes
+app.use("/", require("./routes/scheduleRoutes"));
+app.use("/Ai-schedule", require("./routes/AiSchedule"));
+app.use("/schedule-result", require("./routes/scheduleResultRoutes"));
+
+// =====================
+// START SERVER
+// =====================
+const PORT = process.env.PORT || 5003;
+app.listen(PORT, () => console.log(`🚀 SCHEDULE-Service running on port ${PORT}`));
