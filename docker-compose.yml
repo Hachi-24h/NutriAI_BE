@@ -8,6 +8,8 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    environment:
+      MEAL_SCAN_SERVICE_URL: "http://mealscan-service:5007"
     depends_on:
       - user-service
       - meal-service
