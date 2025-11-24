@@ -1,5 +1,4 @@
 import axios from "axios";
-
 export default function requestLogger(serviceName) {
   return (req, res, next) => {
     res.on("finish", async () => {
