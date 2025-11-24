@@ -33,5 +33,5 @@ app.use("/schedule-result", require("./routes/scheduleResultRoutes"));
 // =====================
 // START SERVER
 // =====================
-const PORT = process.env.PORT || 5003;
+const PORT = process.env.SCHEDULE_PORT ;
 app.listen(PORT, () => console.log(`🚀 SCHEDULE-Service running on port ${PORT}`));

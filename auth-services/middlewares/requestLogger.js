@@ -5,10 +5,7 @@ module.exports = function requestLogger(serviceName) {
     res.on("finish", async () => {
       try {
         // Lấy URL đúng
-        let adminUrl =
-          process.env.IS_DOCKER === "true"
-            ? process.env.ADMIN_SERVICE_BASE_URL_DOCKER
-            : process.env.ADMIN_SERVICE_BASE_URL_LOCAL;
+        let adminUrl = process.env.ADMIN_SERVICE_URL;
 
         // Thêm /increment
         adminUrl = adminUrl + "/increment";

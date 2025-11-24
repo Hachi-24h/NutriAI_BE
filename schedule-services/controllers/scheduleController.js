@@ -2,9 +2,7 @@ const axios = require("axios");
 const Schedule = require("../models/Schedule");
 const { prepareScheduleWithNutrition } = require("../utils/prepareScheduleWithNutrition");
 const ScheduleResult = require("../models/ScheduleResult");
-const mealsApi = (process.env.IS_DOCKER === 'true') ?
-  process.env.MEAL_SERVICE_URL_DOCKER :
-  process.env.MEAL_SERVICE_URL_LOCAL;
+const mealsApi = process.env.MEAL_SERVICE_URL;
 
 /**
  * 🧠 Tạo toàn bộ lịch trình ăn uống từ data mẫu (dùng token)
