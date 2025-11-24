@@ -2,19 +2,14 @@ const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 
-// URL từ ENV hoặc fallback Gateway
 const RAW_SCANAI_URL =
   process.env.SCANAI_URL || "http://gateway:5000/scanai/predict";
 
-// 🔥 Auto append /predict nếu thiếu
 const SCANAI_URL = RAW_SCANAI_URL.endsWith("/predict")
   ? RAW_SCANAI_URL
   : RAW_SCANAI_URL + "/predict";
 
 console.log("🔥 ScanAI API URL =", SCANAI_URL);
-
-const NUTRITIONIX_APP_ID = process.env.NUTRITIONIX_APP_ID;
-const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
 
 const predictFood = async (imagePathOrUrl) => {
   try {
@@ -52,47 +47,45 @@ const predictFood = async (imagePathOrUrl) => {
     );
 
     // ===================================================
-    //        Nutritionix API → lấy dinh dưỡng
+    //       API NINJAS → Lấy dinh dưỡng (FREE)
     // ===================================================
-    console.time("🥗 Nutritionix");
+    console.time("🥗 API-Ninjas");
 
-    const nutriRes = await axios.post(
-      "https://trackapi.nutritionix.com/v2/natural/nutrients",
-      { query: food_en },
+    const ninjasRes = await axios.get(
+      "https://api.api-ninjas.com/v1/nutrition",
       {
-        headers: {
-          "x-app-id": NUTRITIONIX_APP_ID,
-          "x-app-key": NUTRITIONIX_APP_KEY,
-          "Content-Type": "application/json",
-        },
+        params: { query: food_en },
+        headers: { "X-Api-Key": process.env.NINJAS_KEY },
       }
     );
 
-    console.timeEnd("🥗 Nutritionix");
+    console.timeEnd("🥗 API-Ninjas");
 
-    const food = nutriRes.data?.foods?.[0];
+    const food = ninjasRes.data?.[0];
     let nutrition = null;
     let example = null;
 
     if (food) {
-      const weight =
-        Math.max(50, Math.round((food.serving_weight_grams || 100) / 50) * 50);
+      const weight = Math.max(
+        50,
+        Math.round((food.serving_size_g || 100) / 50) * 50
+      );
 
       const caloriesTotal =
-        food.nf_calories * (weight / food.serving_weight_grams);
+        food.calories * (weight / (food.serving_size_g || 100));
 
       nutrition = {
-        calories: food.nf_calories,
-        protein: food.nf_protein,
-        carbs: food.nf_total_carbohydrate,
-        fat: food.nf_total_fat,
+        calories: food.calories,
+        protein: food.protein_g,
+        carbs: food.carbohydrates_total_g,
+        fat: food.fat_total_g,
       };
 
       example = {
-        serving_desc: food.serving_unit || "serving",
+        serving_desc: food.serving_size || "serving",
         weight_grams: weight,
         calories_total: Math.round(caloriesTotal),
-        note: `≈ ${Math.round(caloriesTotal)} kcal cho ${weight}g (${food.food_name})`,
+        note: `≈ ${Math.round(caloriesTotal)} kcal cho ${weight}g (${food.name})`,
       };
     }
 
