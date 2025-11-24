@@ -11,9 +11,16 @@ from deep_translator import GoogleTranslator
 # =========================
 MODEL_PATH = "resnet18_best.pth"
 CLASSES_PATH = "classes.txt"
-API_KEY = "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"
+import os
+from openai import OpenAI
 
-client = OpenAI(api_key=API_KEY)
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+
+if not OPENAI_KEY:
+    raise ValueError("❌ OPENAI_API_KEY is missing! Check environment variables.")
+
+client = OpenAI(api_key=OPENAI_KEY)
+
 app = Flask(__name__)
 
 # =========================
