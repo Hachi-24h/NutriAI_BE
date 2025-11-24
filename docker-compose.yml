@@ -69,7 +69,8 @@ services:
       SCANAI_URL: "${SCANAI_URL}"
     depends_on:
       - admin-service
-
+    env_file:
+      - .env
   scanai-service:
     build: ./scanai-services
     container_name: scanai-service
