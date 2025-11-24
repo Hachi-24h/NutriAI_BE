@@ -1,14 +1,10 @@
 import axios from "axios";
-
 export default function requestLogger(serviceName) {
   return (req, res, next) => {
     res.on("finish", async () => {
       try {
         // Chọn URL admin-service dựa trên môi trường
-        let adminUrl =
-          process.env.IS_DOCKER === "true"
-            ? process.env.ADMIN_SERVICE_URL_DOCKER
-            : process.env.ADMIN_SERVICE_URL_LOCAL;
+        let adminUrl = process.env.ADMIN_SERVICE_URL;
 
         adminUrl = adminUrl + "/increment";
 

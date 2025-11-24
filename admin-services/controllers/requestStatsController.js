@@ -1,5 +1,6 @@
 const RequestStats = require("../models/RequestStats");
 const axios = require("axios");
+// console.log("úgdj", process.env.AUTH_SERVICE_URL)
 // 🟢 Ghi nhận request mới (tăng count hoặc tạo mới)
 const incrementRequestCount = async (req, res) => {
   try {
