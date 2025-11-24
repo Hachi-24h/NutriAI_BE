@@ -60,13 +60,11 @@ services:
     build: ./mealscan-services
     container_name: mealscan-service
     ports:
-      - "5007:5007"
+    - "5007:5007"
     environment:
-      - NUTRITIONIX_APP_ID=${NUTRITIONIX_APP_ID}
-      - NUTRITIONIX_APP_KEY=${NUTRITIONIX_APP_KEY}
-      - SCANAI_URL=${SCANAI_URL}
-    env_file:
-      - .env
+      NUTRITIONIX_APP_ID: "${NUTRITIONIX_APP_ID}"
+      NUTRITIONIX_APP_KEY: "${NUTRITIONIX_APP_KEY}"
+      SCANAI_URL: "${SCANAI_URL}"
     depends_on:
       - admin-service
 
