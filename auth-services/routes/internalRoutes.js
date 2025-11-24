@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Auth = require("../models/auth");
 const axios = require("axios");
-require("dotenv").config();
+dotenv.config({ path: "../.env" });
 
 router.get("/users/:id", async (req, res) => {
   try {

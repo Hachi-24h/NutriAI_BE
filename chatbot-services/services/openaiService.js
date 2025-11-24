@@ -6,7 +6,9 @@ import { fileURLToPath } from "url";
 // 👇 FIX: ép dotenv load file .env từ đúng thư mục chatbot-services
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({
+  path: path.resolve(__dirname, "../../.env") 
+});
 
 // Kiểm tra xem key có load chưa
 console.log("🔑 OPENAI_API_KEY:", process.env.OPENAI_API_KEY ? "✅ Loaded" : "❌ Missing");
