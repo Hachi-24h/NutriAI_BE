@@ -20,21 +20,23 @@ const setupService = (prefix, target) => {
       target,
       changeOrigin: true,
 
-      // ✨ Rewrite path: mọi thứ sau prefix đều trở thành /auth/xxxx đúng chuẩn
-      pathRewrite: (path, req) => {
-        // VD: /auth/auth/login -> /auth/login
-        //     /auth/auth/auth/login -> /auth/login
-        //     /auth/login -> /auth/login
-        const cleaned = path.replace(new RegExp(`^${prefix}+`), prefix);
-
-        // console.log(`🔄 Rewritten: ${path} -> ${cleaned}`);
-        return cleaned;
+      // ⭐ THÊM 4 DÒNG NÀY:
+      timeout: 300000,        // 5 phút
+      proxyTimeout: 300000,   // 5 phút
+      keepAlive: true,
+      onError: (err, req, res) => {
+        console.error("Proxy error:", err);
+        res.status(504).send("Gateway Timeout (Proxy)");
       },
 
+      // ✨ Rewrite path
+      pathRewrite: (path, req) => {
+        const cleaned = path.replace(new RegExp(`^${prefix}+`), prefix);
+        return cleaned;
+      },
     })
   );
-};
-
+}
 
 
 // MAP SERVICES
