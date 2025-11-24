@@ -4,7 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const requestLogger = require("./middlewares/requestLogger");
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 connectDB();
 
 const app = express();

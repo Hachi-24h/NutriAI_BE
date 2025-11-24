@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import requestLogger from "./middlewares/requestLogger.js";
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const app = express();
 app.use(cors());

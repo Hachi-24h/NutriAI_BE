@@ -8,7 +8,7 @@ const http = require("http");
 
 const requestLogger = require("./middlewares/requestLogger");
 const { getUserStats } = require("./controllers/userController");
-dotenv.config();
+dotenv.config({ path: "../.env" });
 connectDB(); // <-- Kết nối database
 
 const app = express();

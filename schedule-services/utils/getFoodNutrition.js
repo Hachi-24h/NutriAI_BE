@@ -1,6 +1,6 @@
 const axios = require("axios");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 const API_URL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
