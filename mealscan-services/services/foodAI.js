@@ -1,29 +1,27 @@
-// services/foodAI.js
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 
-// 🚀 URL của scanAI service (Python) → gọi qua API Gateway
-// Nếu deploy Docker: dùng gateway container
-// Nếu chạy local dev: dùng localhost
-const SCANAI_URL =
+// URL từ ENV hoặc fallback Gateway
+const RAW_SCANAI_URL =
   process.env.SCANAI_URL || "http://gateway:5000/scanai/predict";
+
+// 🔥 Auto append /predict nếu thiếu
+const SCANAI_URL = RAW_SCANAI_URL.endsWith("/predict")
+  ? RAW_SCANAI_URL
+  : RAW_SCANAI_URL + "/predict";
+
+console.log("🔥 ScanAI API URL =", SCANAI_URL);
 
 const NUTRITIONIX_APP_ID = process.env.NUTRITIONIX_APP_ID;
 const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
 
-// ===========================
-//   MAIN FUNCTION
-// ===========================
 const predictFood = async (imagePathOrUrl) => {
   try {
     console.time("⏱️ predictFood TOTAL");
 
     let flaskRes;
 
-    // ==============================
-    // CASE 1 - URL từ Cloudinary
-    // ==============================
     if (imagePathOrUrl.startsWith("http")) {
       console.time("🌐 scanAI /predict (URL)");
 
@@ -34,12 +32,7 @@ const predictFood = async (imagePathOrUrl) => {
       );
 
       console.timeEnd("🌐 scanAI /predict (URL)");
-    }
-
-    // ==============================
-    // CASE 2 - File trong local (ít dùng)
-    // ==============================
-    else {
+    } else {
       console.time("📁 scanAI /predict (file)");
 
       const form = new FormData();
@@ -55,9 +48,7 @@ const predictFood = async (imagePathOrUrl) => {
     const { food_en, food_vi, confidence } = flaskRes.data;
 
     console.log(
-      `🍜 AI Scan: ${food_vi} (${food_en}) [${(confidence * 100).toFixed(
-        1
-      )}%]`
+      `🍜 AI Scan: ${food_vi} (${food_en}) [${(confidence * 100).toFixed(1)}%]`
     );
 
     // ===================================================
