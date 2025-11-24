@@ -16,5 +16,5 @@ app.use("/uploads", express.static("uploads"));
 app.use("/", require("./routes/mealsScheduleRoutes"));
 
 
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.MEAL_PORT ;
 app.listen(PORT, () => console.log(`🚀 Meals Service running on port ${PORT}`));

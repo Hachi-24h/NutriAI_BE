@@ -14,9 +14,7 @@ const REFRESH_TTL_DAYS = 30; // 30 ngày
 const axios = require('axios');
 const OtpCode = require("../models/OtpCode");
 
-const USER_SERVICE_BASE_URL = (process.env.IS_DOCKER === 'true') ?
-  process.env.USER_SERVICE_BASE_URL_DOCKER :
-  process.env.USER_SERVICE_BASE_URL_LOCAL;
+const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_URL;
 
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
 const otpStore = {};

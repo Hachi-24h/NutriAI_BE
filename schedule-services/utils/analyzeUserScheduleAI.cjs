@@ -9,8 +9,6 @@ const { getNutritionAI } = require("./getNutritionAI.js");
 
 dotenv.config({ path: "../.env" });
 
-
-
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Cache: meal cache & GPT cache
