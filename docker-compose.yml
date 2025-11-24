@@ -64,7 +64,7 @@ services:
     ports:
       - "5008:5008"
     restart: always
-  env_file:
+    env_file:
     - ./.env
   admin-service:
     build: ./admin-services
