@@ -15,7 +15,7 @@ import os
 from openai import OpenAI
 
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
-
+print("🔑 OPENAI_API_KEY =", OPENAI_KEY)
 if not OPENAI_KEY:
     raise ValueError("❌ OPENAI_API_KEY is missing! Check environment variables.")
 

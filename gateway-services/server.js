@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-require("dotenv").config({ path: "../.env" });
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
