@@ -7,7 +7,7 @@ const NodeCache = require("node-cache");
 const crypto = require("crypto");
 const { getNutritionAI } = require("./getNutritionAI.js");
 
-dotenv.config();
+dotenv.config({ path: "../.env" });
 
 
 

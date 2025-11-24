@@ -8,7 +8,7 @@ const http = require("http");
 
 const requestLogger = require("./middlewares/requestLogger");
 const { getUserStats } = require("./controllers/userController");
-dotenv.config();
+dotenv.config({ path: "../.env" });
 connectDB(); // <-- Kết nối database
 
 const app = express();
@@ -25,7 +25,7 @@ app.use("/", require("./routes/userRoutes"));
 const internalUsers = require('./routes/internalUsers');
 
 app.use('/internal/users', internalUsers);
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.USER_PORT;
 
 
 server.listen(PORT, () => console.log(`🚀 User-Service running with realtime on port ${PORT}`));
