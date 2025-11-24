@@ -1,0 +1,218 @@
+{"id":1,"name_vi":"Cơm tấm sườn bì chả","name_en":"Broken rice with grilled pork and egg cake","calories":650,"protein":35,"fat":20,"carbs":75,"weight_grams":350,"photo":"food_images/com_tam_suon_bi_cha.jfif"}
+{"id":2,"name_vi":"Phở bò","name_en":"Beef noodle soup","calories":480,"protein":28,"fat":12,"carbs":60,"weight_grams":400,"photo":"food_images/pho_bo.jfif"}
+{"id":3,"name_vi":"Bún chả Hà Nội","name_en":"Grilled pork with rice vermicelli","calories":520,"protein":30,"fat":15,"carbs":58,"weight_grams":380,"photo":"food_images/bun_cha_ha_noi.jfif"}
+{"id":4,"name_vi":"Bún bò Huế","name_en":"Hue beef noodle soup","calories":480,"protein":28,"fat":12,"carbs":56,"weight_grams":420,"photo":"food_images/bun_bo_hue.jfif"}
+{"id":5,"name_vi":"Hủ tiếu Nam Vang","name_en":"Nam Vang noodle soup","calories":520,"protein":27,"fat":10,"carbs":65,"weight_grams":400,"photo":"food_images/hu_tieu_nam_vang.jfif"}
+{"id":6,"name_vi":"Bún riêu cua","name_en":"Crab noodle soup","calories":430,"protein":24,"fat":8,"carbs":54,"weight_grams":380,"photo":"food_images/bun_rieu_cua.jfif"}
+{"id":7,"name_vi":"Cơm gà xối mỡ","name_en":"Crispy fried chicken rice","calories":650,"protein":32,"fat":22,"carbs":70,"weight_grams":360,"photo":"food_images/com_ga_xoi_mo.jfif"}
+{"id":8,"name_vi":"Bánh mì thịt","name_en":"Vietnamese sandwich with pork","calories":410,"protein":19,"fat":14,"carbs":50,"weight_grams":300,"photo":"food_images/banh_mi_thit.jfif"}
+{"id":9,"name_vi":"Bánh mì chả cá","name_en":"Fish cake sandwich","calories":390,"protein":18,"fat":10,"carbs":52,"weight_grams":290,"photo":"food_images/banh_mi_cha_ca.jfif"}
+{"id":10,"name_vi":"Bánh mì trứng ốp la","name_en":"Egg sandwich","calories":370,"protein":16,"fat":12,"carbs":45,"weight_grams":280,"photo":"food_images/banh_mi_op_la.jfif"}
+{"id":11,"name_vi":"Cơm chiên Dương Châu","name_en":"Yangzhou fried rice","calories":600,"protein":25,"fat":18,"carbs":78,"weight_grams":350,"photo":"food_images/com_chien_duong_chau.jfif"}
+{"id":12,"name_vi":"Cơm chiên hải sản","name_en":"Seafood fried rice","calories":580,"protein":27,"fat":15,"carbs":72,"weight_grams":340,"photo":"food_images/com_chien_hai_san.jfif"}
+{"id":13,"name_vi":"Cơm chiên trứng","name_en":"Egg fried rice","calories":500,"protein":20,"fat":15,"carbs":65,"weight_grams":340,"photo":"food_images/com_chien_trung.jfif"}
+{"id":14,"name_vi":"Cơm chiên bò","name_en":"Beef fried rice","calories":590,"protein":28,"fat":16,"carbs":70,"weight_grams":360,"photo":"food_images/com_chien_bo.jfif"}
+{"id":15,"name_vi":"Cơm chiên gà","name_en":"Chicken fried rice","calories":560,"protein":26,"fat":14,"carbs":68,"weight_grams":340,"photo":"food_images/com_chien_ga.jfif"}
+{"id":16,"name_vi":"Cơm chiên tôm","name_en":"Shrimp fried rice","calories":570,"protein":27,"fat":13,"carbs":70,"weight_grams":340,"photo":"food_images/com_chien_tom.jfif"}
+{"id":17,"name_vi":"Cơm chiên chay","name_en":"Vegetarian fried rice","calories":480,"protein":15,"fat":10,"carbs":60,"weight_grams":330,"photo":"food_images/com_chien_chay.jfif"}
+{"id":18,"name_vi":"Cơm gà Hội An","name_en":"Hoi An chicken rice","calories":530,"protein":26,"fat":12,"carbs":66,"weight_grams":350,"photo":"food_images/com_ga_hoi_an.jfif"}
+{"id":19,"name_vi":"Cơm sườn nướng","name_en":"Grilled pork rib rice","calories":620,"protein":33,"fat":20,"carbs":72,"weight_grams":360,"photo":"food_images/com_suon_nuong.jfif"}
+{"id":20,"name_vi":"Cơm cá kho tộ","name_en":"Braised fish rice","calories":580,"protein":32,"fat":18,"carbs":68,"weight_grams":360,"photo":"food_images/com_ca_kho_to.jfif"}
+{"id":21,"name_vi":"Cơm thịt kho trứng","name_en":"Braised pork and egg rice","calories":600,"protein":30,"fat":22,"carbs":68,"weight_grams":370,"photo":"food_images/com_thit_kho_trung.jfif"}
+{"id":22,"name_vi":"Cơm tấm bì chả","name_en":"Broken rice with shredded pork and egg loaf","calories":640,"protein":35,"fat":21,"carbs":75,"weight_grams":350,"photo":"food_images/com_tam_bi_cha.jfif"}
+{"id":23,"name_vi":"Bún thịt nướng","name_en":"Grilled pork with vermicelli","calories":520,"protein":30,"fat":15,"carbs":60,"weight_grams":380,"photo":"food_images/bun_thit_nuong.jfif"}
+{"id":24,"name_vi":"Bún cá","name_en":"Fish noodle soup","calories":450,"protein":25,"fat":9,"carbs":58,"weight_grams":380,"photo":"food_images/bun_ca.jfif"}
+{"id":25,"name_vi":"Bún mắm","name_en":"Fermented fish noodle soup","calories":490,"protein":28,"fat":10,"carbs":63,"weight_grams":400,"photo":"food_images/bun_mam.jfif"}
+{"id":26,"name_vi":"Bún chả giò","name_en":"Vermicelli with fried spring rolls","calories":480,"protein":25,"fat":13,"carbs":60,"weight_grams":370,"photo":"food_images/bun_cha_gio.jfif"}
+{"id":27,"name_vi":"Bún tôm thịt nướng","name_en":"Grilled pork and shrimp vermicelli","calories":540,"protein":32,"fat":16,"carbs":62,"weight_grams":380,"photo":"food_images/bun_tom_thit_nuong.jfif"}
+{"id":28,"name_vi":"Phở gà","name_en":"Chicken noodle soup","calories":420,"protein":26,"fat":8,"carbs":55,"weight_grams":380,"photo":"food_images/pho_ga.jfif"}
+{"id":29,"name_vi":"Phở tái nạm gầu gân","name_en":"Beef noodle soup with flank and tendon","calories":490,"protein":30,"fat":13,"carbs":60,"weight_grams":400,"photo":"food_images/pho_tai_nam_gau_gan.jfif"}
+{"id":30,"name_vi":"Phở đặc biệt","name_en":"Special beef noodle soup","calories":510,"protein":31,"fat":14,"carbs":62,"weight_grams":420,"photo":"food_images/pho_dac_biet.jfif"}
+{"id":31,"name_vi":"Phở chay","name_en":"Vegetarian noodle soup","calories":380,"protein":12,"fat":6,"carbs":50,"weight_grams":350,"photo":"food_images/pho_chay.jfif"}
+{"id":32,"name_vi":"Miến gà","name_en":"Chicken glass noodle soup","calories":450,"protein":28,"fat":10,"carbs":55,"weight_grams":350,"photo":"food_images/mien_ga.jfif"}
+{"id":33,"name_vi":"Miến lươn","name_en":"Eel glass noodle soup","calories":470,"protein":30,"fat":9,"carbs":58,"weight_grams":360,"photo":"food_images/mien_luon.jfif"}
+{"id":34,"name_vi":"Miến xào hải sản","name_en":"Stir-fried seafood glass noodles","calories":520,"protein":27,"fat":12,"carbs":65,"weight_grams":370,"photo":"food_images/mien_xao_hai_san.jfif"}
+{"id":35,"name_vi":"Miến xào bò","name_en":"Stir-fried beef glass noodles","calories":510,"protein":28,"fat":11,"carbs":64,"weight_grams":370,"photo":"food_images/mien_xao_bo.jfif"}
+{"id":36,"name_vi":"Mì xào giòn hải sản","name_en":"Crispy noodles with seafood","calories":560,"protein":26,"fat":15,"carbs":70,"weight_grams":390,"photo":"food_images/mi_xao_gion_hai_san.jfif"}
+{"id":37,"name_vi":"Mì xào mềm bò","name_en":"Stir-fried soft noodles with beef","calories":540,"protein":30,"fat":13,"carbs":68,"weight_grams":380,"photo":"food_images/mi_xao_mem_bo.jfif"}
+{"id":38,"name_vi":"Mì quảng","name_en":"Quang style noodles","calories":480,"protein":28,"fat":11,"carbs":55,"weight_grams":380,"photo":"food_images/mi_quang.jfif"}
+{"id":39,"name_vi":"Hủ tiếu xào","name_en":"Stir-fried rice noodles","calories":530,"protein":27,"fat":12,"carbs":68,"weight_grams":380,"photo":"food_images/hu_tieu_xao.jfif"}
+{"id":40,"name_vi":"Hủ tiếu bò kho","name_en":"Beef stew rice noodles","calories":510,"protein":30,"fat":10,"carbs":65,"weight_grams":400,"photo":"food_images/hu_tieu_bo_kho.jfif"}
+{"id":41,"name_vi":"Hủ tiếu bò viên","name_en":"Rice noodles with beef balls","calories":500,"protein":29,"fat":11,"carbs":63,"weight_grams":390,"photo":"food_images/hu_tieu_bo_vien.jfif"}
+{"id":42,"name_vi":"Hủ tiếu gõ","name_en":"Street style rice noodles","calories":460,"protein":25,"fat":9,"carbs":58,"weight_grams":380,"photo":"food_images/hu_tieu_go.jfif"}
+{"id":43,"name_vi":"Hủ tiếu Sa Đéc","name_en":"Sa Dec noodle soup","calories":490,"protein":27,"fat":10,"carbs":61,"weight_grams":390,"photo":"food_images/hu_tieu_sa_dec.jfif"}
+{"id":44,"name_vi":"Bánh canh Trảng Bàng","name_en":"Trang Bang noodle soup","calories":500,"protein":28,"fat":10,"carbs":63,"weight_grams":400,"photo":"food_images/banh_canh_trang_bang.jfif"}
+{"id":45,"name_vi":"Bánh canh cá lóc","name_en":"Snakehead fish noodle soup","calories":470,"protein":26,"fat":9,"carbs":60,"weight_grams":390,"photo":"food_images/banh_canh_ca_loc.jfif"}
+{"id":46,"name_vi":"Bánh canh giò heo","name_en":"Thick noodle soup with pork leg","calories":520,"protein":28,"fat":14,"carbs":58,"weight_grams":420,"photo":"food_images/banh_canh_gio_heo.jfif"}
+{"id":47,"name_vi":"Bánh canh chả cá","name_en":"Fish cake noodle soup","calories":460,"protein":25,"fat":8,"carbs":58,"weight_grams":380,"photo":"food_images/banh_canh_cha_ca.jfif"}
+{"id":48,"name_vi":"Bánh canh cua","name_en":"Crab noodle soup","calories":480,"protein":25,"fat":9,"carbs":60,"weight_grams":400,"photo":"food_images/banh_canh_cua.jfif"}
+{"id":49,"name_vi":"Cao lầu","name_en":"Cao lau noodles","calories":450,"protein":26,"fat":9,"carbs":55,"weight_grams":380,"photo":"food_images/cao_lau.jfif"}
+{"id":50,"name_vi":"Bún đậu mắm tôm","name_en":"Fermented shrimp paste with tofu and noodles","calories":550,"protein":30,"fat":15,"carbs":60,"weight_grams":400,"photo":"food_images/bun_dau_mam_tom.jfif"}
+{"id":51,"name_vi":"Bún chả giò thịt nướng","name_en":"Vermicelli with grilled pork and spring rolls","calories":540,"protein":32,"fat":16,"carbs":65,"weight_grams":390,"photo":"food_images/bun_cha_gio_thit_nuong.jfif"}
+{"id":52,"name_vi":"Bún măng vịt","name_en":"Duck noodle soup with bamboo shoots","calories":480,"protein":28,"fat":12,"carbs":55,"weight_grams":390,"photo":"food_images/bun_mang_vit.jfif"}
+{"id":53,"name_vi":"Bún ốc","name_en":"Snail noodle soup","calories":460,"protein":25,"fat":9,"carbs":57,"weight_grams":380,"photo":"food_images/bun_oc.jfif"}
+{"id":54,"name_vi":"Bún thái hải sản","name_en":"Thai-style seafood noodle soup","calories":500,"protein":27,"fat":10,"carbs":62,"weight_grams":390,"photo":"food_images/bun_thai_hai_san.jfif"}
+{"id":55,"name_vi":"Bún riêu chay","name_en":"Vegetarian crab noodle soup","calories":420,"protein":14,"fat":7,"carbs":54,"weight_grams":370,"photo":"food_images/bun_rieu_chay.jfif"}
+{"id":56,"name_vi":"Miến xào chay","name_en":"Stir-fried vegetarian glass noodles","calories":430,"protein":13,"fat":9,"carbs":55,"weight_grams":360,"photo":"food_images/mien_xao_chay.jfif"}
+{"id":57,"name_vi":"Cơm chay thập cẩm","name_en":"Mixed vegetarian rice","calories":450,"protein":14,"fat":10,"carbs":60,"weight_grams":360,"photo":"food_images/com_chay_thap_cam.jfif"}
+{"id":58,"name_vi":"Đậu hũ sốt cà chua","name_en":"Tofu with tomato sauce","calories":380,"protein":15,"fat":8,"carbs":48,"weight_grams":300,"photo":"food_images/dau_hu_sot_ca_chua.jfif"}
+{"id":59,"name_vi":"Đậu hũ chiên sả ớt","name_en":"Fried tofu with lemongrass and chili","calories":360,"protein":14,"fat":10,"carbs":42,"weight_grams":300,"photo":"food_images/dau_hu_chien_sa_ot.jfif"}
+{"id":60,"name_vi":"Đậu hũ kho nấm","name_en":"Braised tofu with mushrooms","calories":370,"protein":15,"fat":9,"carbs":44,"weight_grams":310,"photo":"food_images/dau_hu_kho_nam.jfif"}
+{"id":61,"name_vi":"Đậu hũ non hấp gừng","name_en":"Steamed tofu with ginger","calories":340,"protein":13,"fat":6,"carbs":40,"weight_grams":280,"photo":"food_images/dau_hu_hap_gung.jfif"}
+{"id":62,"name_vi":"Đậu hũ nhồi thịt sốt cà","name_en":"Stuffed tofu with meat and tomato sauce","calories":460,"protein":25,"fat":12,"carbs":50,"weight_grams":320,"photo":"food_images/dau_hu_nhoi_thit_sot_ca.jfif"}
+{"id":63,"name_vi":"Thịt kho trứng","name_en":"Braised pork with eggs","calories":580,"protein":30,"fat":20,"carbs":55,"weight_grams":350,"photo":"food_images/thit_kho_trung.jfif"}
+{"id":64,"name_vi":"Cá kho tộ","name_en":"Caramelized fish in clay pot","calories":520,"protein":35,"fat":15,"carbs":48,"weight_grams":340,"photo":"food_images/ca_kho_to.jfif"}
+{"id":65,"name_vi":"Tôm rim mặn","name_en":"Caramelized shrimp","calories":480,"protein":32,"fat":10,"carbs":50,"weight_grams":320,"photo":"food_images/tom_rim_man.jfif"}
+{"id":66,"name_vi":"Thịt luộc cà pháo","name_en":"Boiled pork with eggplant","calories":450,"protein":28,"fat":14,"carbs":45,"weight_grams":330,"photo":"food_images/thit_luoc_ca_phao.jfif"}
+{"id":67,"name_vi":"Canh chua cá lóc","name_en":"Sour soup with snakehead fish","calories":370,"protein":24,"fat":6,"carbs":40,"weight_grams":400,"photo":"food_images/canh_chua_ca_loc.jfif"}
+{"id":68,"name_vi":"Canh khổ qua nhồi thịt","name_en":"Stuffed bitter melon soup","calories":380,"protein":25,"fat":8,"carbs":38,"weight_grams":380,"photo":"food_images/canh_kho_qua_nhoi_thit.jfif"}
+{"id":69,"name_vi":"Canh bí đỏ","name_en":"Pumpkin soup","calories":310,"protein":10,"fat":5,"carbs":35,"weight_grams":350,"photo":"food_images/canh_bi_do.jfif"}
+{"id":70,"name_vi":"Canh rau ngót thịt bằm","name_en":"Malabar spinach soup with minced pork","calories":330,"protein":20,"fat":7,"carbs":28,"weight_grams":340,"photo":"food_images/canh_rau_ngot_thit_bam.jfif"}
+{"id":71,"name_vi":"Canh bầu nấu tôm","name_en":"Bottle gourd soup with shrimp","calories":320,"protein":18,"fat":6,"carbs":30,"weight_grams":340,"photo":"food_images/canh_bau_nau_tom.jfif"}
+{"id":72,"name_vi":"Canh cải nấu thịt bằm","name_en":"Vegetable soup with minced pork","calories":330,"protein":20,"fat":7,"carbs":29,"weight_grams":350,"photo":"food_images/canh_cai_nau_thit_bam.jfif"}
+{"id":73,"name_vi":"Canh cua mồng tơi","name_en":"Crab soup with Malabar spinach","calories":340,"protein":21,"fat":7,"carbs":31,"weight_grams":350,"photo":"food_images/canh_cua_mong_toi.jfif"}
+{"id":74,"name_vi":"Canh cà chua trứng","name_en":"Tomato and egg soup","calories":300,"protein":12,"fat":6,"carbs":32,"weight_grams":320,"photo":"food_images/canh_ca_chua_trung.jfif"}
+{"id":75,"name_vi":"Canh khoai mỡ tôm","name_en":"Taro soup with shrimp","calories":340,"protein":19,"fat":6,"carbs":35,"weight_grams":350,"photo":"food_images/canh_khoai_mo_tom.jfif"}
+{"id":76,"name_vi":"Canh mướp đắng chay","name_en":"Vegetarian bitter melon soup","calories":310,"protein":10,"fat":5,"carbs":34,"weight_grams":330,"photo":"food_images/canh_muop_dang_chay.jfif"}
+{"id":77,"name_vi":"Canh chua cá bông lau","name_en":"Sour soup with catfish","calories":390,"protein":25,"fat":8,"carbs":38,"weight_grams":380,"photo":"food_images/canh_chua_ca_bong_lau.jfif"}
+{"id":78,"name_vi":"Canh gà lá giang","name_en":"Chicken soup with giang leaves","calories":380,"protein":26,"fat":8,"carbs":36,"weight_grams":370,"photo":"food_images/canh_ga_la_giang.jfif"}
+{"id":79,"name_vi":"Canh rau đay","name_en":"Jute leaves soup","calories":310,"protein":11,"fat":4,"carbs":33,"weight_grams":320,"photo":"food_images/canh_rau_day.jfif"}
+{"id":80,"name_vi":"Canh mồng tơi tôm khô","name_en":"Malabar spinach soup with dried shrimp","calories":320,"protein":18,"fat":5,"carbs":31,"weight_grams":330,"photo":"food_images/canh_mong_toi_tom_kho.jfif"}
+{"id":81,"name_vi":"Canh cải chua cá rô","name_en":"Sour mustard green soup with perch","calories":350,"protein":22,"fat":6,"carbs":34,"weight_grams":360,"photo":"food_images/canh_cai_chua_ca_ro.jfif"}
+{"id":82,"name_vi":"Canh chua tôm","name_en":"Sour shrimp soup","calories":340,"protein":20,"fat":6,"carbs":33,"weight_grams":350,"photo":"food_images/canh_chua_tom.jfif"}
+{"id":83,"name_vi":"Cá chiên sả ớt","name_en":"Fried fish with lemongrass and chili","calories":500,"protein":33,"fat":14,"carbs":40,"weight_grams":340,"photo":"food_images/ca_chien_sa_ot.jfif"}
+{"id":84,"name_vi":"Cá nướng muối ớt","name_en":"Grilled fish with chili salt","calories":490,"protein":32,"fat":13,"carbs":38,"weight_grams":340,"photo":"food_images/ca_nuong_muoi_ot.jfif"}
+{"id":85,"name_vi":"Cá kho tiêu","name_en":"Braised fish with pepper","calories":520,"protein":34,"fat":15,"carbs":45,"weight_grams":340,"photo":"food_images/ca_kho_tieu.jfif"}
+{"id":86,"name_vi":"Cá hấp gừng","name_en":"Steamed fish with ginger","calories":430,"protein":31,"fat":8,"carbs":28,"weight_grams":330,"photo":"food_images/ca_hap_gung.jfif"}
+{"id":87,"name_vi":"Cá basa chiên giòn","name_en":"Crispy fried basa fish","calories":540,"protein":32,"fat":16,"carbs":50,"weight_grams":360,"photo":"food_images/ca_basa_chien_gion.jfif"}
+{"id":88,"name_vi":"Cá thu kho cà","name_en":"Braised mackerel with tomato","calories":520,"protein":33,"fat":15,"carbs":42,"weight_grams":350,"photo":"food_images/ca_thu_kho_ca.jfif"}
+{"id":89,"name_vi":"Cá ngừ kho thơm","name_en":"Braised tuna with pineapple","calories":530,"protein":32,"fat":14,"carbs":44,"weight_grams":350,"photo":"food_images/ca_ngu_kho_thom.jfif"}
+{"id":90,"name_vi":"Tôm chiên xù","name_en":"Deep-fried shrimp","calories":560,"protein":30,"fat":18,"carbs":48,"weight_grams":340,"photo":"food_images/tom_chien_xu.jfif"}
+{"id":91,"name_vi":"Tôm rim nước mắm","name_en":"Caramelized shrimp with fish sauce","calories":490,"protein":31,"fat":12,"carbs":42,"weight_grams":320,"photo":"food_images/tom_rim_nuoc_mam.jfif"}
+{"id":92,"name_vi":"Tôm hấp bia","name_en":"Beer steamed shrimp","calories":420,"protein":30,"fat":9,"carbs":30,"weight_grams":320,"photo":"food_images/tom_hap_bia.jfif"}
+{"id":93,"name_vi":"Tôm nướng muối ớt","name_en":"Grilled shrimp with chili salt","calories":460,"protein":32,"fat":11,"carbs":35,"weight_grams":330,"photo":"food_images/tom_nuong_muoi_ot.jfif"}
+{"id":94,"name_vi":"Tôm xào chua ngọt","name_en":"Sweet and sour shrimp","calories":470,"protein":29,"fat":10,"carbs":45,"weight_grams":330,"photo":"food_images/tom_xao_chua_ngot.jfif"}
+{"id":95,"name_vi":"Mực xào sa tế","name_en":"Stir-fried squid with satay","calories":490,"protein":28,"fat":12,"carbs":42,"weight_grams":330,"photo":"food_images/muc_xao_sa_te.jfif"}
+{"id":96,"name_vi":"Mực chiên giòn","name_en":"Crispy fried squid","calories":510,"protein":26,"fat":15,"carbs":45,"weight_grams":330,"photo":"food_images/muc_chien_gion.jfif"}
+{"id":97,"name_vi":"Mực nướng muối ớt","name_en":"Grilled squid with chili salt","calories":480,"protein":28,"fat":12,"carbs":40,"weight_grams":330,"photo":"food_images/muc_nuong_muoi_ot.jfif"}
+{"id":98,"name_vi":"Ghẹ hấp bia","name_en":"Beer steamed crab","calories":460,"protein":29,"fat":10,"carbs":38,"weight_grams":340,"photo":"food_images/ghe_hap_bia.jfif"}
+{"id":99,"name_vi":"Ghẹ rang me","name_en":"Crab with tamarind sauce","calories":500,"protein":30,"fat":13,"carbs":44,"weight_grams":350,"photo":"food_images/ghe_rang_me.jfif"}
+{"id":100,"name_vi":"Cua rang me","name_en":"Stir-fried crab with tamarind","calories":520,"protein":31,"fat":14,"carbs":45,"weight_grams":350,"photo":"food_images/cua_rang_me.jfif"}
+{"id":101,"name_vi":"Cua hấp","name_en":"Steamed crab","calories":440,"protein":29,"fat":9,"carbs":32,"weight_grams":340,"photo":"food_images/cua_hap.jfif"}
+{"id":102,"name_vi":"Cua nướng","name_en":"Grilled crab","calories":460,"protein":30,"fat":10,"carbs":35,"weight_grams":340,"photo":"food_images/cua_nuong.jfif"}
+{"id":103,"name_vi":"Trứng chiên","name_en":"Fried egg","calories":360,"protein":18,"fat":10,"carbs":28,"weight_grams":280,"photo":"food_images/trung_chien.jfif"}
+{"id":104,"name_vi":"Trứng hấp thịt bằm","name_en":"Steamed egg with minced pork","calories":420,"protein":22,"fat":12,"carbs":35,"weight_grams":320,"photo":"food_images/trung_hap_thit_bam.jfif"}
+{"id":105,"name_vi":"Trứng kho thịt","name_en":"Braised egg with pork","calories":470,"protein":25,"fat":14,"carbs":40,"weight_grams":330,"photo":"food_images/trung_kho_thit.jfif"}
+{"id":106,"name_vi":"Trứng luộc","name_en":"Boiled egg","calories":300,"protein":14,"fat":9,"carbs":25,"weight_grams":250,"photo":"food_images/trung_luoc.jfif"}
+{"id":107,"name_vi":"Thịt kho tiêu","name_en":"Braised pork with pepper","calories":540,"protein":30,"fat":16,"carbs":42,"weight_grams":340,"photo":"food_images/thit_kho_tieu.jfif"}
+{"id":108,"name_vi":"Thịt kho tàu","name_en":"Caramelized pork belly with eggs","calories":580,"protein":33,"fat":20,"carbs":46,"weight_grams":350,"photo":"food_images/thit_kho_tau.jfif"}
+{"id":109,"name_vi":"Thịt nướng sa tế","name_en":"Grilled pork with satay","calories":530,"protein":32,"fat":15,"carbs":45,"weight_grams":340,"photo":"food_images/thit_nuong_sa_te.jfif"}
+{"id":110,"name_vi":"Thịt xào ớt chuông","name_en":"Stir-fried pork with bell peppers","calories":500,"protein":28,"fat":12,"carbs":43,"weight_grams":330,"photo":"food_images/thit_xao_ot_chuong.jfif"}
+{"id":111,"name_vi":"Thịt luộc","name_en":"Boiled pork","calories":420,"protein":26,"fat":10,"carbs":35,"weight_grams":300,"photo":"food_images/thit_luoc.jfif"}
+{"id":112,"name_vi":"Thịt nướng mật ong","name_en":"Grilled pork with honey","calories":540,"protein":32,"fat":14,"carbs":48,"weight_grams":340,"photo":"food_images/thit_nuong_mat_ong.jfif"}
+{"id":113,"name_vi":"Thịt nướng riềng sả","name_en":"Grilled pork with lemongrass and galangal","calories":520,"protein":30,"fat":13,"carbs":46,"weight_grams":340,"photo":"food_images/thit_nuong_rieng_sa.jfif"}
+{"id":114,"name_vi":"Thịt xào hành tây","name_en":"Stir-fried pork with onion","calories":490,"protein":28,"fat":12,"carbs":42,"weight_grams":330,"photo":"food_images/thit_xao_hanh_tay.jfif"}
+{"id":115,"name_vi":"Gà luộc","name_en":"Boiled chicken","calories":430,"protein":32,"fat":10,"carbs":25,"weight_grams":320,"photo":"food_images/ga_luoc.jfif"}
+{"id":116,"name_vi":"Gà chiên nước mắm","name_en":"Fried chicken with fish sauce","calories":560,"protein":35,"fat":18,"carbs":40,"weight_grams":340,"photo":"food_images/ga_chien_nuoc_mam.jfif"}
+{"id":117,"name_vi":"Gà nướng mật ong","name_en":"Grilled chicken with honey","calories":540,"protein":33,"fat":15,"carbs":38,"weight_grams":340,"photo":"food_images/ga_nuong_mat_ong.jfif"}
+{"id":118,"name_vi":"Gà xào sả ớt","name_en":"Stir-fried chicken with lemongrass and chili","calories":500,"protein":30,"fat":13,"carbs":42,"weight_grams":330,"photo":"food_images/ga_xao_sa_ot.jfif"}
+{"id":119,"name_vi":"Gà kho gừng","name_en":"Braised chicken with ginger","calories":520,"protein":31,"fat":14,"carbs":45,"weight_grams":330,"photo":"food_images/ga_kho_gung.jfif"}
+{"id":120,"name_vi":"Gà hấp hành","name_en":"Steamed chicken with onion","calories":480,"protein":30,"fat":12,"carbs":38,"weight_grams":320,"photo":"food_images/ga_hap_hanh.jfif"}
+{"id":121,"name_vi":"Gà rô ti","name_en":"Vietnamese roasted chicken","calories":530,"protein":32,"fat":14,"carbs":43,"weight_grams":330,"photo":"food_images/ga_ro_ti.jfif"}
+{"id":122,"name_vi":"Gà hấp muối","name_en":"Salt steamed chicken","calories":490,"protein":31,"fat":12,"carbs":37,"weight_grams":320,"photo":"food_images/ga_hap_muoi.jfif"}
+{"id":123,"name_vi":"Gà nấu cari","name_en":"Vietnamese chicken curry","calories":560,"protein":29,"fat":18,"carbs":48,"weight_grams":350,"photo":"food_images/ga_nau_cari.jfif"}
+{"id":124,"name_vi":"Gà kho sả ớt","name_en":"Braised chicken with lemongrass and chili","calories":520,"protein":30,"fat":14,"carbs":42,"weight_grams":330,"photo":"food_images/ga_kho_sa_ot.jfif"}
+{"id":125,"name_vi":"Gà nướng muối ớt","name_en":"Grilled chicken with chili salt","calories":550,"protein":33,"fat":16,"carbs":44,"weight_grams":340,"photo":"food_images/ga_nuong_muoi_ot.jfif"}
+{"id":126,"name_vi":"Gà chiên giòn","name_en":"Crispy fried chicken","calories":580,"protein":32,"fat":20,"carbs":46,"weight_grams":340,"photo":"food_images/ga_chien_gion.jfif"}
+{"id":127,"name_vi":"Gà nướng sa tế","name_en":"Grilled chicken with satay sauce","calories":540,"protein":33,"fat":15,"carbs":43,"weight_grams":340,"photo":"food_images/ga_nuong_sa_te.jfif"}
+{"id":128,"name_vi":"Gà xào nấm","name_en":"Stir-fried chicken with mushrooms","calories":510,"protein":29,"fat":12,"carbs":40,"weight_grams":330,"photo":"food_images/ga_xao_nam.jfif"}
+{"id":129,"name_vi":"Gà kho tiêu","name_en":"Braised chicken with pepper","calories":520,"protein":31,"fat":13,"carbs":42,"weight_grams":330,"photo":"food_images/ga_kho_tieu.jfif"}
+{"id":130,"name_vi":"Gà xào chua ngọt","name_en":"Sweet and sour chicken","calories":540,"protein":30,"fat":14,"carbs":45,"weight_grams":340,"photo":"food_images/ga_xao_chua_ngot.jfif"}
+{"id":131,"name_vi":"Thịt bò lúc lắc","name_en":"Shaking beef","calories":560,"protein":36,"fat":15,"carbs":42,"weight_grams":340,"photo":"food_images/bo_luc_lac.jfif"}
+{"id":132,"name_vi":"Bò xào hành tây","name_en":"Stir-fried beef with onion","calories":520,"protein":33,"fat":13,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_hanh_tay.jfif"}
+{"id":133,"name_vi":"Bò kho","name_en":"Vietnamese beef stew","calories":580,"protein":35,"fat":17,"carbs":48,"weight_grams":350,"photo":"food_images/bo_kho.jfif"}
+{"id":134,"name_vi":"Bò nướng lá lốt","name_en":"Grilled beef in betel leaves","calories":550,"protein":34,"fat":15,"carbs":44,"weight_grams":340,"photo":"food_images/bo_nuong_la_lot.jfif"}
+{"id":135,"name_vi":"Bò xào ớt chuông","name_en":"Stir-fried beef with bell peppers","calories":540,"protein":33,"fat":14,"carbs":43,"weight_grams":340,"photo":"food_images/bo_xao_ot_chuong.jfif"}
+{"id":136,"name_vi":"Bò né","name_en":"Vietnamese sizzling beef","calories":590,"protein":37,"fat":18,"carbs":47,"weight_grams":360,"photo":"food_images/bo_ne.jfif"}
+{"id":137,"name_vi":"Bò bít tết","name_en":"Vietnamese beef steak","calories":600,"protein":38,"fat":18,"carbs":46,"weight_grams":360,"photo":"food_images/bo_bit_tet.jfif"}
+{"id":138,"name_vi":"Bò hấp gừng","name_en":"Steamed beef with ginger","calories":500,"protein":33,"fat":12,"carbs":38,"weight_grams":330,"photo":"food_images/bo_hap_gung.jfif"}
+{"id":139,"name_vi":"Bò nướng sa tế","name_en":"Grilled beef with satay sauce","calories":550,"protein":35,"fat":15,"carbs":44,"weight_grams":340,"photo":"food_images/bo_nuong_sa_te.jfif"}
+{"id":140,"name_vi":"Bò nướng muối ớt","name_en":"Grilled beef with chili salt","calories":540,"protein":34,"fat":14,"carbs":43,"weight_grams":340,"photo":"food_images/bo_nuong_muoi_ot.jfif"}
+{"id":141,"name_vi":"Bò hầm tiêu xanh","name_en":"Braised beef with green pepper","calories":580,"protein":36,"fat":17,"carbs":46,"weight_grams":350,"photo":"food_images/bo_ham_tieu_xanh.jfif"}
+{"id":142,"name_vi":"Bò nấu lagu","name_en":"Beef stew with vegetables","calories":560,"protein":34,"fat":16,"carbs":45,"weight_grams":350,"photo":"food_images/bo_nau_lagu.jfif"}
+{"id":143,"name_vi":"Bò xào nấm","name_en":"Stir-fried beef with mushrooms","calories":530,"protein":33,"fat":13,"carbs":41,"weight_grams":330,"photo":"food_images/bo_xao_nam.jfif"}
+{"id":144,"name_vi":"Bò xào bông cải","name_en":"Stir-fried beef with broccoli","calories":520,"protein":33,"fat":12,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_bong_cai.jfif"}
+{"id":145,"name_vi":"Bò cuốn nấm kim châm","name_en":"Beef rolls with enoki mushrooms","calories":510,"protein":32,"fat":12,"carbs":39,"weight_grams":320,"photo":"food_images/bo_cuon_nam_kim_cham.jfif"}
+{"id":146,"name_vi":"Bò xào sa tế","name_en":"Stir-fried beef with satay sauce","calories":540,"protein":33,"fat":14,"carbs":43,"weight_grams":330,"photo":"food_images/bo_xao_sa_te.jfif"}
+{"id":147,"name_vi":"Bò kho gừng","name_en":"Braised beef with ginger","calories":550,"protein":34,"fat":15,"carbs":44,"weight_grams":340,"photo":"food_images/bo_kho_gung.jfif"}
+{"id":148,"name_vi":"Bò xào cần tây","name_en":"Stir-fried beef with celery","calories":520,"protein":32,"fat":13,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_can_tay.jfif"}
+{"id":149,"name_vi":"Bò kho tàu","name_en":"Braised beef stew","calories":570,"protein":35,"fat":16,"carbs":45,"weight_grams":350,"photo":"food_images/bo_kho_tau.jfif"}
+{"id":150,"name_vi":"Bò xào rau muống","name_en":"Stir-fried beef with morning glory","calories":530,"protein":32,"fat":14,"carbs":42,"weight_grams":330,"photo":"food_images/bo_xao_rau_muong.jfif"}
+{"id":151,"name_vi":"Bò hấp hành gừng","name_en":"Steamed beef with onion and ginger","calories":510,"protein":33,"fat":12,"carbs":39,"weight_grams":330,"photo":"food_images/bo_hap_hanh_gung.jfif"}
+{"id":152,"name_vi":"Bò kho cà rốt","name_en":"Beef stew with carrot","calories":550,"protein":34,"fat":15,"carbs":44,"weight_grams":350,"photo":"food_images/bo_kho_ca_rot.jfif"}
+{"id":153,"name_vi":"Bò nướng mật ong","name_en":"Grilled beef with honey","calories":560,"protein":35,"fat":15,"carbs":44,"weight_grams":340,"photo":"food_images/bo_nuong_mat_ong.jfif"}
+{"id":154,"name_vi":"Bò xào khổ qua","name_en":"Stir-fried beef with bitter melon","calories":520,"protein":32,"fat":13,"carbs":41,"weight_grams":330,"photo":"food_images/bo_xao_kho_qua.jfif"}
+{"id":155,"name_vi":"Bò nướng sả","name_en":"Grilled beef with lemongrass","calories":540,"protein":33,"fat":14,"carbs":43,"weight_grams":340,"photo":"food_images/bo_nuong_sa.jfif"}
+{"id":156,"name_vi":"Bò kho cà chua","name_en":"Braised beef with tomato","calories":550,"protein":34,"fat":15,"carbs":44,"weight_grams":350,"photo":"food_images/bo_kho_ca_chua.jfif"}
+{"id":157,"name_vi":"Bò xào cải thìa","name_en":"Stir-fried beef with bok choy","calories":530,"protein":33,"fat":13,"carbs":42,"weight_grams":330,"photo":"food_images/bo_xao_cai_thia.jfif"}
+{"id":158,"name_vi":"Bò xào hành tỏi","name_en":"Stir-fried beef with garlic and onion","calories":520,"protein":33,"fat":13,"carbs":41,"weight_grams":330,"photo":"food_images/bo_xao_hanh_toi.jfif"}
+{"id":159,"name_vi":"Bò xào bông hẹ","name_en":"Stir-fried beef with chives","calories":520,"protein":32,"fat":13,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_bong_he.jfif"}
+{"id":160,"name_vi":"Bò kho tiêu đen","name_en":"Braised beef with black pepper","calories":560,"protein":34,"fat":15,"carbs":44,"weight_grams":340,"photo":"food_images/bo_kho_tieu_den.jfif"}
+{"id":161,"name_vi":"Bò cuốn lá lốt nướng than","name_en":"Grilled beef wrapped in betel leaves","calories":560,"protein":35,"fat":16,"carbs":43,"weight_grams":340,"photo":"food_images/bo_cuon_la_lot_nuong_than.jfif"}
+{"id":162,"name_vi":"Bò xào mướp","name_en":"Stir-fried beef with gourd","calories":510,"protein":31,"fat":12,"carbs":39,"weight_grams":320,"photo":"food_images/bo_xao_muop.jfif"}
+{"id":163,"name_vi":"Bò xào đậu que","name_en":"Stir-fried beef with green beans","calories":520,"protein":32,"fat":13,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_dau_que.jfif"}
+{"id":164,"name_vi":"Bò xào rau cải","name_en":"Stir-fried beef with greens","calories":530,"protein":33,"fat":13,"carbs":41,"weight_grams":330,"photo":"food_images/bo_xao_rau_cai.jfif"}
+{"id":165,"name_vi":"Bò xào dứa","name_en":"Stir-fried beef with pineapple","calories":540,"protein":34,"fat":14,"carbs":42,"weight_grams":340,"photo":"food_images/bo_xao_dua.jfif"}
+{"id":166,"name_vi":"Bò xào hành cần","name_en":"Stir-fried beef with onion and celery","calories":530,"protein":33,"fat":13,"carbs":41,"weight_grams":330,"photo":"food_images/bo_xao_hanh_can.jfif"}
+{"id":167,"name_vi":"Bò hấp sả","name_en":"Steamed beef with lemongrass","calories":510,"protein":32,"fat":12,"carbs":38,"weight_grams":320,"photo":"food_images/bo_hap_sa.jfif"}
+{"id":168,"name_vi":"Bò xào giá đỗ","name_en":"Stir-fried beef with bean sprouts","calories":520,"protein":33,"fat":13,"carbs":40,"weight_grams":330,"photo":"food_images/bo_xao_gia_do.jfif"}
+{"id":169,"name_vi":"Bánh tráng trộn","name_en":"Mixed rice paper salad","calories":420,"protein":12,"fat":14,"carbs":58,"weight_grams":250,"photo":"food_images/banh_trang_tron.jfif"}
+{"id":170,"name_vi":"Bánh tráng nướng","name_en":"Vietnamese grilled rice paper","calories":380,"protein":10,"fat":12,"carbs":55,"weight_grams":220,"photo":"food_images/banh_trang_nuong.jfif"}
+{"id":171,"name_vi":"Xoài lắc","name_en":"Shaken mango with chili salt","calories":160,"protein":2,"fat":1,"carbs":38,"weight_grams":200,"photo":"food_images/xoai_lac.jfif"}
+{"id":172,"name_vi":"Cóc lắc","name_en":"Shaken ambarella with chili salt","calories":150,"protein":2,"fat":1,"carbs":36,"weight_grams":180,"photo":"food_images/coc_lac.jfif"}
+{"id":173,"name_vi":"Trái cây tô","name_en":"Mixed fruit bowl","calories":240,"protein":3,"fat":5,"carbs":45,"weight_grams":250,"photo":"food_images/trai_cay_to.jfif"}
+{"id":174,"name_vi":"Chè thập cẩm","name_en":"Mixed sweet soup","calories":320,"protein":6,"fat":8,"carbs":60,"weight_grams":300,"photo":"food_images/che_thap_cam.jfif"}
+{"id":175,"name_vi":"Chè đậu xanh","name_en":"Mung bean sweet soup","calories":280,"protein":7,"fat":5,"carbs":52,"weight_grams":280,"photo":"food_images/che_dau_xanh.jfif"}
+{"id":176,"name_vi":"Chè bưởi","name_en":"Pomelo sweet soup","calories":300,"protein":6,"fat":6,"carbs":55,"weight_grams":280,"photo":"food_images/che_buoi.jfif"}
+{"id":177,"name_vi":"Chè trôi nước","name_en":"Glutinous rice balls in sweet soup","calories":350,"protein":7,"fat":8,"carbs":65,"weight_grams":300,"photo":"food_images/che_troi_nuoc.jfif"}
+{"id":178,"name_vi":"Chè khúc bạch","name_en":"Almond jelly sweet soup","calories":330,"protein":8,"fat":10,"carbs":55,"weight_grams":300,"photo":"food_images/che_khuc_bach.jfif"}
+{"id":179,"name_vi":"Bánh flan","name_en":"Vietnamese caramel flan","calories":220,"protein":7,"fat":10,"carbs":25,"weight_grams":120,"photo":"food_images/banh_flan.jfif"}
+{"id":180,"name_vi":"Kem dừa","name_en":"Coconut ice cream","calories":290,"protein":4,"fat":14,"carbs":35,"weight_grams":150,"photo":"food_images/kem_dua.jfif"}
+{"id":181,"name_vi":"Kem trái cây","name_en":"Fruit ice cream","calories":260,"protein":3,"fat":8,"carbs":45,"weight_grams":150,"photo":"food_images/kem_trai_cay.jfif"}
+{"id":182,"name_vi":"Bánh chuối nướng","name_en":"Baked banana cake","calories":370,"protein":6,"fat":12,"carbs":60,"weight_grams":180,"photo":"food_images/banh_chuoi_nuong.jfif"}
+{"id":183,"name_vi":"Bánh khoai chiên","name_en":"Fried sweet potato cake","calories":310,"protein":3,"fat":10,"carbs":55,"weight_grams":150,"photo":"food_images/banh_khoai_chien.jfif"}
+{"id":184,"name_vi":"Chuối chiên","name_en":"Fried banana","calories":330,"protein":3,"fat":12,"carbs":58,"weight_grams":150,"photo":"food_images/chuoi_chien.jfif"}
+{"id":185,"name_vi":"Khoai lang chiên","name_en":"Fried sweet potatoes","calories":280,"protein":3,"fat":9,"carbs":48,"weight_grams":150,"photo":"food_images/khoai_lang_chien.jfif"}
+{"id":186,"name_vi":"Bánh cam","name_en":"Sesame rice ball","calories":300,"protein":5,"fat":10,"carbs":52,"weight_grams":140,"photo":"food_images/banh_cam.jfif"}
+{"id":187,"name_vi":"Bánh tiêu","name_en":"Vietnamese hollow donut","calories":290,"protein":5,"fat":9,"carbs":50,"weight_grams":130,"photo":"food_images/banh_tieu.jfif"}
+{"id":188,"name_vi":"Bánh giò","name_en":"Vietnamese pyramid rice dumpling","calories":340,"protein":10,"fat":12,"carbs":45,"weight_grams":180,"photo":"food_images/banh_gio.jfif"}
+{"id":189,"name_vi":"Bánh bao","name_en":"Steamed bun with pork filling","calories":360,"protein":14,"fat":12,"carbs":48,"weight_grams":200,"photo":"food_images/banh_bao.jfif"}
+{"id":190,"name_vi":"Bánh bò nướng","name_en":"Vietnamese honeycomb cake","calories":280,"protein":4,"fat":7,"carbs":50,"weight_grams":150,"photo":"food_images/banh_bo_nuong.jfif"}
+{"id":191,"name_vi":"Bánh da lợn","name_en":"Layered steamed cake","calories":260,"protein":3,"fat":8,"carbs":45,"weight_grams":150,"photo":"food_images/banh_da_lon.jfif"}
+{"id":192,"name_vi":"Bánh rán mặn","name_en":"Fried savory rice ball","calories":340,"protein":9,"fat":12,"carbs":48,"weight_grams":160,"photo":"food_images/banh_ran_man.jfif"}
+{"id":193,"name_vi":"Bánh rán ngọt","name_en":"Sweet fried rice ball","calories":320,"protein":5,"fat":11,"carbs":50,"weight_grams":150,"photo":"food_images/banh_ran_ngot.jfif"}
+{"id":194,"name_vi":"Bánh chuối chiên","name_en":"Vietnamese fried banana cake","calories":340,"protein":3,"fat":11,"carbs":58,"weight_grams":160,"photo":"food_images/banh_chuoi_chien.jfif"}
+{"id":195,"name_vi":"Trà sữa trân châu","name_en":"Bubble milk tea","calories":380,"protein":6,"fat":8,"carbs":70,"weight_grams":450,"photo":"food_images/tra_sua_tran_chau.jfif"}
+{"id":196,"name_vi":"Trà đào cam sả","name_en":"Peach orange lemongrass tea","calories":180,"protein":1,"fat":0,"carbs":42,"weight_grams":400,"photo":"food_images/tra_dao_cam_sa.jfif"}
+{"id":197,"name_vi":"Trà tắc","name_en":"Kumquat tea","calories":100,"protein":1,"fat":0,"carbs":25,"weight_grams":350,"photo":"food_images/tra_tac.jfif"}
+{"id":198,"name_vi":"Nước mía","name_en":"Sugarcane juice","calories":180,"protein":1,"fat":0,"carbs":45,"weight_grams":400,"photo":"food_images/nuoc_mia.jfif"}
+{"id":199,"name_vi":"Sinh tố bơ","name_en":"Avocado smoothie","calories":310,"protein":5,"fat":18,"carbs":32,"weight_grams":350,"photo":"food_images/sinh_to_bo.jfif"}
+{"id":200,"name_vi":"Sinh tố xoài","name_en":"Mango smoothie","calories":260,"protein":3,"fat":2,"carbs":58,"weight_grams":350,"photo":"food_images/sinh_to_xoai.jfif"}
+{"id":201,"name_vi":"Sinh tố dâu","name_en":"Strawberry smoothie","calories":240,"protein":3,"fat":2,"carbs":52,"weight_grams":350,"photo":"food_images/sinh_to_dau.jfif"}
+{"id":202,"name_vi":"Sinh tố mãng cầu","name_en":"Soursop smoothie","calories":280,"protein":3,"fat":2,"carbs":60,"weight_grams":350,"photo":"food_images/sinh_to_mang_cau.jfif"}
+{"id":203,"name_vi":"Cà phê sữa đá","name_en":"Vietnamese iced coffee with milk","calories":150,"protein":3,"fat":5,"carbs":25,"weight_grams":250,"photo":"food_images/ca_phe_sua_da.jfif"}
+{"id":204,"name_vi":"Cà phê đen đá","name_en":"Vietnamese iced black coffee","calories":15,"protein":0,"fat":0,"carbs":3,"weight_grams":250,"photo":"food_images/ca_phe_den_da.jfif"}
+{"id":205,"name_vi":"Cà phê trứng","name_en":"Vietnamese egg coffee","calories":220,"protein":7,"fat":12,"carbs":20,"weight_grams":200,"photo":"food_images/ca_phe_trung.jfif"}
+{"id":206,"name_vi":"Sâm bí đao","name_en":"Winter melon tea","calories":100,"protein":0,"fat":0,"carbs":25,"weight_grams":400,"photo":"food_images/sam_bi_dao.jfif"}
+{"id":207,"name_vi":"Sữa đậu nành","name_en":"Soy milk","calories":150,"protein":7,"fat":4,"carbs":20,"weight_grams":300,"photo":"food_images/sua_dau_nanh.jfif"}
+{"id":208,"name_vi":"Sữa bắp","name_en":"Corn milk","calories":180,"protein":5,"fat":4,"carbs":30,"weight_grams":300,"photo":"food_images/sua_bap.jfif"}
+{"id":209,"name_vi":"Rau má đậu xanh","name_en":"Pennywort and mung bean drink","calories":160,"protein":4,"fat":2,"carbs":32,"weight_grams":350,"photo":"food_images/rau_ma_dau_xanh.jfif"}
+{"id":210,"name_vi":"Nước sâm","name_en":"Herbal tea","calories":90,"protein":0,"fat":0,"carbs":22,"weight_grams":350,"photo":"food_images/nuoc_sam.jfif"}
+{"id":211,"name_vi":"Nước chanh muối","name_en":"Salted lemonade","calories":120,"protein":0,"fat":0,"carbs":30,"weight_grams":350,"photo":"food_images/nuoc_chanh_muoi.jfif"}
+{"id":212,"name_vi":"Đá me","name_en":"Tamarind juice with ice","calories":160,"protein":1,"fat":0,"carbs":38,"weight_grams":350,"photo":"food_images/da_me.jfif"}
+{"id":213,"name_vi":"Sương sáo sữa","name_en":"Grass jelly with milk","calories":220,"protein":4,"fat":6,"carbs":40,"weight_grams":350,"photo":"food_images/suong_sao_sua.jfif"}
+{"id":214,"name_vi":"Sương sáo đá","name_en":"Iced grass jelly drink","calories":120,"protein":2,"fat":1,"carbs":25,"weight_grams":350,"photo":"food_images/suong_sao_da.jfif"}
+{"id":215,"name_vi":"Trà chanh","name_en":"Lemon tea","calories":90,"protein":0,"fat":0,"carbs":22,"weight_grams":350,"photo":"food_images/tra_chanh.jfif"}
+{"id":216,"name_vi":"Trà sữa matcha","name_en":"Matcha milk tea","calories":340,"protein":6,"fat":8,"carbs":60,"weight_grams":400,"photo":"food_images/tra_sua_matcha.jfif"}
+{"id":217,"name_vi":"Sữa tươi trân châu đường đen","name_en":"Fresh milk with brown sugar boba","calories":420,"protein":7,"fat":10,"carbs":75,"weight_grams":400,"photo":"food_images/sua_tuoi_tran_chau_duong_den.jfif"}
+{"id":218,"name_vi":"Trà vải","name_en":"Lychee tea","calories":160,"protein":1,"fat":0,"carbs":38,"weight_grams":350,"photo":"food_images/tra_vai.jfif"}

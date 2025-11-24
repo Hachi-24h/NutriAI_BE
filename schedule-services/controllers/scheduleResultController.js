@@ -2,6 +2,11 @@
 const Schedule = require("../models/Schedule");
 const ScheduleResult = require("../models/ScheduleResult");
 
+exports.getResultByScheduleId = (req, res) => {
+  console.log("🔥 /by-schedule hit");
+  console.log("Body:", req.body);
+};
+
 // 🧾 Gửi form đánh giá sau khi hoàn thành lịch
 const submitScheduleResult = async (req, res) => {
   try {
@@ -76,15 +81,39 @@ const submitScheduleResult = async (req, res) => {
 const getResultsByUser = async (req, res) => {
   try {
     const userId = req.auth.id;
+
+    // Lấy danh sách kết quả
     const results = await ScheduleResult.find({ userId }).sort({ createdAt: -1 });
-    if (!results.length)
-      return res.status(200).json({ message: "Bạn chưa có đánh giá nào.", total: 0, results: [] });
+
+    if (!results.length) {
+      return res.status(200).json({
+        message: "Bạn chưa có đánh giá nào.",
+        total: 0,
+        results: []
+      });
+    }
+
+    // 🔥 JOIN thủ công để thêm thông tin Schedule
+    const enrichedResults = await Promise.all(
+      results.map(async (result) => {
+        const schedule = await Schedule.findById(result.scheduleId);
+        return {
+          ...result.toObject(),
+          nameSchedule: schedule?.nameSchedule || "Không tìm thấy",
+          goal: schedule?.goal || result.goal,
+          kgGoal: schedule?.kgGoal || result.kgGoal,
+          startDate: schedule?.startDate || result.startDate,
+          endDate: schedule?.endDate || result.endDate
+        };
+      })
+    );
 
     res.status(200).json({
       message: "Lấy danh sách đánh giá thành công ✅",
-      total: results.length,
-      results
+      total: enrichedResults.length,
+      results: enrichedResults
     });
+
   } catch (err) {
     console.error("❌ getResultsByUser:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });

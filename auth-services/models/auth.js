@@ -13,6 +13,7 @@ const AuthSchema = new mongoose.Schema({
   providers: [ProviderSchema],     // 👈 danh sách provider
   biometric: { type: Boolean, default: false }, // 👈 thêm dòng này
   role: { type: String, default: 'user' },
+  isSuperAdmin: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Auth', AuthSchema);
