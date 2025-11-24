@@ -46,6 +46,8 @@ setupService("/meal", process.env.MEAL_SERVICE);
 setupService("/chatbot", process.env.CHATBOT_SERVICE);
 setupService("/admin", process.env.ADMIN_SERVICE);
 setupService("/mealscan", process.env.MEAL_SCAN_SERVICE);
+setupService("/scanai", process.env.SCANAI_SERVICE);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Gateway running on ${PORT}`)
