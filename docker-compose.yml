@@ -6,55 +6,63 @@ services:
     container_name: gateway
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     depends_on:
       - user-service
       - meal-service
       - schedule-service
       - chatbot-service
       - auth-service
-      - friend-service
       - admin-service
-    env_file:
-    - ./gateway-services/.env
-
 
   user-service:
     build: ./user-services
     container_name: user-service
     ports:
       - "5001:5001"
+    env_file:
+      - .env
 
   meal-service:
     build: ./meals-services
     container_name: meal-service
     ports:
       - "5002:5002"
+    env_file:
+      - .env
 
   schedule-service:
     build: ./schedule-services
     container_name: schedule-service
     ports:
       - "5003:5003"
+    env_file:
+      - .env
 
   chatbot-service:
     build: ./chatbot-services
     container_name: chatbot-service
     ports:
       - "5004:5004"
+    env_file:
+      - .env
 
   auth-service:
     build: ./auth-services
     container_name: auth-service
     ports:
       - "5005:5005"
+    env_file:
+      - .env
 
   mealscan-service:
     build: ./mealscan-services
     container_name: mealscan-service
-    env_file:
-      - ./mealscan-services/.env
     ports:
       - "5007:5007"
+    env_file:
+      - .env
     depends_on:
       - admin-service
 
@@ -63,6 +71,8 @@ services:
     container_name: scanai-service
     ports:
       - "5008:5008"
+    env_file:
+      - .env
     restart: always
 
   admin-service:
@@ -70,3 +80,5 @@ services:
     container_name: admin-service
     ports:
       - "5010:5010"
+    env_file:
+      - .env
