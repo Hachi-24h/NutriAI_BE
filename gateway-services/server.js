@@ -19,24 +19,20 @@ const setupService = (prefix, target) => {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-
-      // ⭐ THÊM 4 DÒNG NÀY:
-      timeout: 300000,        // 5 phút
-      proxyTimeout: 300000,   // 5 phút
+      timeout: 300000,
+      proxyTimeout: 300000,
       keepAlive: true,
       onError: (err, req, res) => {
         console.error("Proxy error:", err);
         res.status(504).send("Gateway Timeout (Proxy)");
       },
-
-      // ✨ Rewrite path
-      pathRewrite: (path, req) => {
-        const cleaned = path.replace(new RegExp(`^${prefix}+`), prefix);
-        return cleaned;
-      },
+      pathRewrite: {
+        [`^${prefix}`]: ""
+      }
     })
   );
 }
+
 
 
 // MAP SERVICES
