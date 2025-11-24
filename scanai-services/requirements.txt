@@ -3,3 +3,6 @@ torchvision
 google-cloud-storage
 pillow
 tqdm
+openai
+flask
+deep-translator

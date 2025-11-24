@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const dataPath = path.join(__dirname, "../data/foods.json");
+const dataPath = path.join(__dirname, "../data/food.json");
 const GCS_URL = "https://storage.googleapis.com/nutri-ai-foods/";
 
 let FOODS_CACHE = [];
@@ -9,11 +9,13 @@ let FOODS_CACHE = [];
 function loadFoods() {
   if (FOODS_CACHE.length > 0) return FOODS_CACHE;
 
-  const lines = fs.readFileSync(dataPath, "utf-8").trim().split("\n");
-  FOODS_CACHE = lines.map(line => {
-    const f = JSON.parse(line);
+  // Đọc file JSON dạng mảng chuẩn
+  const raw = fs.readFileSync(dataPath, "utf-8");
+  const foods = JSON.parse(raw);
+
+  FOODS_CACHE = foods.map(f => {
     if (f.photo && !f.photo.startsWith("http")) {
-      f.photo = GCS_URL + f.photo; // ✅ tự động thêm link GCS
+      f.photo = GCS_URL + f.photo;
     }
     return f;
   });
