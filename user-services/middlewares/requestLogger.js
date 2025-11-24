@@ -5,15 +5,10 @@ module.exports = function requestLogger(serviceName) {
     res.on("finish", async () => {
       try {
         // Lấy URL theo môi trường
-        let adminUrl =
-          process.env.IS_DOCKER === "true"
-            ? process.env.ADMIN_SERVICE_URL_DOCKER
-            : process.env.ADMIN_SERVICE_URL_LOCAL;
+        let adminUrl = process.env.ADMIN_SERVICE_URL;
 
         // Nối route increment
         adminUrl = adminUrl + "/increment";
-
-        console.log("Admin URL:", adminUrl);
 
         await axios.post(adminUrl, {
           service: serviceName,
