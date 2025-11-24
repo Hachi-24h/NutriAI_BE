@@ -74,7 +74,8 @@ services:
     env_file:
       - .env
     restart: always
-
+  env_file:
+    - ./.env
   admin-service:
     build: ./admin-services
     container_name: admin-service
