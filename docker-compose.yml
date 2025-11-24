@@ -48,16 +48,6 @@ services:
     ports:
       - "5005:5005"
 
-  friend-service:
-    build: ./friend-services
-    container_name: friend-service
-    env_file:
-      - ./friend-services/.env
-    ports:
-      - "5006:5006"
-    depends_on:
-      - user-service
-
   mealscan-service:
     build: ./mealscan-services
     container_name: mealscan-service
