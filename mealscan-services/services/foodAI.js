@@ -4,18 +4,20 @@ const fs = require("fs");
 
 // URL từ ENV hoặc fallback Gateway
 const RAW_SCANAI_URL =
-  process.env.SCANAI_URL || "http://gateway:5000/scanai/predict";
+  process.env.SCANAI_URL 
 
 // 🔥 Auto append /predict nếu thiếu
 const SCANAI_URL = RAW_SCANAI_URL.endsWith("/predict")
   ? RAW_SCANAI_URL
   : RAW_SCANAI_URL + "/predict";
 
-console.log("🔥 ScanAI API URL =", SCANAI_URL);
+
 
 const NUTRITIONIX_APP_ID = process.env.NUTRITIONIX_APP_ID;
 const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
-
+console.log("🔥 ScanAI API URL =", SCANAI_URL,"\n");
+console.log(" key1 =", NUTRITIONIX_APP_ID);
+console.log("key 2 :",NUTRITIONIX_APP_KEY)
 const predictFood = async (imagePathOrUrl) => {
   try {
     console.time("⏱️ predictFood TOTAL");
