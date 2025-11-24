@@ -1,6 +1,6 @@
 const RequestStats = require("../models/RequestStats");
-const config = require("../config/env");
 const axios = require("axios");
+// console.log("úgdj", process.env.AUTH_SERVICE_URL)
 // 🟢 Ghi nhận request mới (tăng count hoặc tạo mới)
 const incrementRequestCount = async (req, res) => {
   try {
@@ -73,13 +73,12 @@ const getWeeklyStats = async (req, res) => {
 const getAllServiceStats = async (req, res) => {
   try {
     const baseUrls = {
-      auth: config.AUTH_SERVICE_URL,
-      user: config.USER_SERVICE_URL,
-      schedule: config.SCHEDULE_SERVICE_URL,
-      scheduleResult: config.SCHEDULE_RESULT_SERVICE_URL,
-      meal: config.MEAL_SERVICE_URL,
-      mealscan: config.MEAL_SCAN_SERVICE_URL,
-     
+      auth:  process.env.AUTH_SERVICE_URL,
+      user:  process.env.USER_SERVICE_URL ,
+      schedule: process.env.SCHEDULE_SERVICE_URL,
+      scheduleResult:  process.env.SCHEDULE_RESULT_SERVICE_URL,
+      meal:  process.env.MEAL_SERVICE_URL,
+      mealscan: process.env.MEAL_SCAN_SERVICE_URL,
     };
 
     console.log("🔍 Bắt đầu gọi song song tới các service...");

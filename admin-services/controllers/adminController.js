@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const axios = require("axios");
-
+// require("dotenv").config({ path: "../.env" });
+// console.log("URL AUTH", process.env.ADMIN_SERVICE_URL)
 exports.createAdmin = async (req, res) => {
   try {
     const { email, displayName, password } = req.body;
@@ -9,7 +10,7 @@ exports.createAdmin = async (req, res) => {
 
     // Gửi request sang auth-service để tạo admin
     const authRes = await axios.post(
-      `${process.env.AUTH_SERVICE_URL_LOCAL}/admin-register`,
+      `${process.env.ADMIN_SERVICE_URL}/admin-register`,
       { 
         email: normalizedEmail,
         displayName,
@@ -35,7 +36,7 @@ exports.createAdmin = async (req, res) => {
 exports.getAllAdmins = async (req, res) => {
   try {
     // Gọi sang auth-service để lấy những user có role = admin
-    const response = await axios.get(`${process.env.AUTH_SERVICE_URL_LOCAL}/admins`);
+    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/admins`);
 
     return res.json({ admins: response.data.users });
 
@@ -54,7 +55,7 @@ exports.deleteAdmin = async (req, res) => {
 
     // Gọi sang auth-service để xoá user
     const result = await axios.delete(
-      `${process.env.AUTH_SERVICE_URL_LOCAL}/auth/admin/${id}`
+      `${process.env.ADMIN_SERVICE_URL}/auth/admin/${id}`
     );
 
     return res.json({

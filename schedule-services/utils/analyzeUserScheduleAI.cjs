@@ -7,9 +7,7 @@ const NodeCache = require("node-cache");
 const crypto = require("crypto");
 const { getNutritionAI } = require("./getNutritionAI.js");
 
-dotenv.config();
-
-
+dotenv.config({ path: "../.env" });
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

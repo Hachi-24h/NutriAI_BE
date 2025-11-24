@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const requestLogger = require("./middlewares/requestLogger");
-dotenv.config();
+dotenv.config({ path: "../.env" });
 connectDB();
 
 const app = express();
@@ -16,5 +16,5 @@ app.use("/uploads", express.static("uploads"));
 app.use("/", require("./routes/mealsScheduleRoutes"));
 
 
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.MEAL_PORT ;
 app.listen(PORT, () => console.log(`🚀 Meals Service running on port ${PORT}`));

@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { createProxyMiddleware } = require("http-proxy-middleware");
-require("dotenv").config();
+require("dotenv").config({ path: "../.env" });
 
 const app = express();
 app.use(cors());
@@ -38,15 +38,16 @@ const setupService = (prefix, target) => {
 
 
 // MAP SERVICES
-setupService("/auth", process.env.AUTH_SERVICE);
-setupService("/user", process.env.USER_SERVICE);
-setupService("/friend", process.env.FRIEND_SERVICE);
-setupService("/schedule", process.env.SCHEDULE_SERVICE);
-setupService("/meal", process.env.MEAL_SERVICE);
-setupService("/chatbot", process.env.CHATBOT_SERVICE);
-setupService("/admin", process.env.ADMIN_SERVICE);
-setupService("/mealscan", process.env.MEAL_SCAN_SERVICE);
-const PORT = process.env.PORT || 5000;
+setupService("/auth", process.env.AUTH_SERVICE_URL);
+setupService("/user", process.env.USER_SERVICE_URL);
+setupService("/schedule", process.env.SCHEDULE_SERVICE_URL);
+setupService("/meal", process.env.MEAL_SERVICE_URL);
+setupService("/chatbot", process.env.CHATBOT_SERVICE_URL);
+setupService("/admin", process.env.ADMIN_SERVICE_URL);
+setupService("/mealscan", process.env.MEAL_SCAN_SERVICE_URL);
+setupService("/scanai", process.env.SCANAI_URL);
+
+const PORT = process.env.GATEWAY_PORT;
 app.listen(PORT, () =>
   console.log(`🚀 Gateway running on ${PORT}`)
 );

@@ -1,42 +1,70 @@
+// services/foodAI.js
 const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 
+// 🚀 URL của scanAI service (Python) → gọi qua API Gateway
+// Nếu deploy Docker: dùng gateway container
+// Nếu chạy local dev: dùng localhost
+const SCANAI_URL =
+  process.env.SCANAI_URL || "http://gateway:5000/scanai/predict";
+
 const NUTRITIONIX_APP_ID = process.env.NUTRITIONIX_APP_ID;
 const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
 
- const predictFood = async (imagePath) => {
+// ===========================
+//   MAIN FUNCTION
+// ===========================
+const predictFood = async (imagePathOrUrl) => {
   try {
-    console.time("⏱️ Tổng thời gian predictFood");
+    console.time("⏱️ predictFood TOTAL");
 
     let flaskRes;
 
-    // ✅ Nếu là URL Cloudinary → gửi JSON
-    if (imagePath.startsWith("http")) {
-      console.time("🌐 Flask /predict (URL)");
+    // ==============================
+    // CASE 1 - URL từ Cloudinary
+    // ==============================
+    if (imagePathOrUrl.startsWith("http")) {
+      console.time("🌐 scanAI /predict (URL)");
+
       flaskRes = await axios.post(
-        "http://127.0.0.1:5008/predict", // ⚙️ port trùng Flask bạn đang chạy
-        { image_url: imagePath },
+        SCANAI_URL,
+        { image_url: imagePathOrUrl },
         { headers: { "Content-Type": "application/json" } }
       );
-      console.timeEnd("🌐 Flask /predict (URL)");
-    } 
-    // ✅ Nếu là file local (ít khi dùng)
+
+      console.timeEnd("🌐 scanAI /predict (URL)");
+    }
+
+    // ==============================
+    // CASE 2 - File trong local (ít dùng)
+    // ==============================
     else {
-      console.time("📁 Flask /predict (file)");
+      console.time("📁 scanAI /predict (file)");
+
       const form = new FormData();
-      form.append("file", fs.createReadStream(imagePath));
-      flaskRes = await axios.post("http://127.0.0.1:5008/predict", form, {
+      form.append("file", fs.createReadStream(imagePathOrUrl));
+
+      flaskRes = await axios.post(SCANAI_URL, form, {
         headers: form.getHeaders(),
       });
-      console.timeEnd("📁 Flask /predict (file)");
+
+      console.timeEnd("📁 scanAI /predict (file)");
     }
 
     const { food_en, food_vi, confidence } = flaskRes.data;
-    console.log(`🍜 AI nhận dạng: ${food_vi} (${food_en}) [${(confidence * 100).toFixed(1)}%]`);
 
-    // 🥗 Nutritionix API
+    console.log(
+      `🍜 AI Scan: ${food_vi} (${food_en}) [${(confidence * 100).toFixed(
+        1
+      )}%]`
+    );
+
+    // ===================================================
+    //        Nutritionix API → lấy dinh dưỡng
+    // ===================================================
     console.time("🥗 Nutritionix");
+
     const nutriRes = await axios.post(
       "https://trackapi.nutritionix.com/v2/natural/nutrients",
       { query: food_en },
@@ -48,6 +76,7 @@ const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
         },
       }
     );
+
     console.timeEnd("🥗 Nutritionix");
 
     const food = nutriRes.data?.foods?.[0];
@@ -55,8 +84,11 @@ const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
     let example = null;
 
     if (food) {
-      const weight = Math.max(50, Math.round((food.serving_weight_grams || 100) / 50) * 50);
-      const caloriesTotal = food.nf_calories * (weight / food.serving_weight_grams);
+      const weight =
+        Math.max(50, Math.round((food.serving_weight_grams || 100) / 50) * 50);
+
+      const caloriesTotal =
+        food.nf_calories * (weight / food.serving_weight_grams);
 
       nutrition = {
         calories: food.nf_calories,
@@ -73,19 +105,20 @@ const NUTRITIONIX_APP_KEY = process.env.NUTRITIONIX_APP_KEY;
       };
     }
 
-    console.timeEnd("⏱️ Tổng thời gian predictFood");
+    console.timeEnd("⏱️ predictFood TOTAL");
 
     return {
-      name_vi: food_vi,
       name_en: food_en,
+      name_vi: food_vi,
       confidence,
       nutrition,
       example,
     };
-
   } catch (err) {
-    console.error("❌ Prediction or nutrition error:", err.message);
+    console.error("❌ predictFood ERROR:", err.message);
+    if (err.response?.data) console.error("SERVER:", err.response.data);
     return null;
   }
 };
+
 module.exports = { predictFood };

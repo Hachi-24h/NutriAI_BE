@@ -5,9 +5,7 @@ module.exports = function requestLogger(serviceName) {
     res.on("finish", async () => {
       try {
         // Chọn URL admin-service dựa trên môi trường
-        let adminUrl = (process.env.IS_DOCKER === 'true') ?
-          process.env.ADMIN_SERVICE_URL_DOCKER :
-          process.env.ADMIN_SERVICE_URL_LOCAL;
+        let adminUrl = process.env.ADMIN_SERVICE_URL;
           adminUrl= adminUrl + "/increment";
           console.log("Admin URL:", adminUrl);
         // Gửi dữ liệu sang admin-service
