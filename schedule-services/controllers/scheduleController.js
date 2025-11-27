@@ -53,7 +53,7 @@ const createFullSchedule = async (req, res) => {
     }
 
     // 🔹 Lấy lại chi tiết template để build danh sách ngày ngẫu nhiên
-    
+
     const { data: templateDetail } = await axios.get(
       `${mealsApi}/get-meal-templates/${templateId}`,
       { headers: { Authorization: req.headers.authorization } }
@@ -537,4 +537,55 @@ const getScheduleStatistics = async (req, res) => {
 };
 
 
-module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate, deleteSchedule, getScheduleStatistics };
+// dừng lịch trình
+const stopSchedule = async (req, res) => {
+  try {
+    const userId = req.auth.id;
+    const { scheduleId } = req.params;
+
+    const schedule = await Schedule.findOne({ _id: scheduleId, userId });
+    if (!schedule) {
+      return res.status(404).json({ message: "Không tìm thấy lịch" });
+    }
+
+    schedule.status = "draft";
+    await schedule.save();
+
+    return res.status(200).json({
+      message: "Đã dừng lịch trình thành công",
+      schedule
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+// hoàn thành lịch trình
+const completeSchedule = async (req, res) => {
+  try {
+    const userId = req.auth.id;
+    const { scheduleId } = req.params;
+
+    // 1️⃣ Kiểm tra schedule có thuộc user không
+    const schedule = await Schedule.findOne({ _id: scheduleId, userId });
+    if (!schedule) {
+      return res.status(404).json({ message: "Không tìm thấy lịch" });
+    }
+
+    // 2️⃣ Đổi trạng thái thành completed
+    schedule.status = "completed";
+    await schedule.save();
+
+    return res.status(200).json({
+      message: "Đã đánh dấu lịch trình hoàn thành 🎉",
+      schedule
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: err.message
+    });
+  }
+};
+
+module.exports = { createFullSchedule, getSchedulesByUser, getFullSchedule, getNextMealInCurrentSchedule, enrichScheduleBeforeCreate, deleteSchedule, getScheduleStatistics, stopSchedule ,completeSchedule };
