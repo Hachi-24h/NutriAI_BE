@@ -4,7 +4,7 @@ const requireInternal = require("../middlewares/requireInternal");
 const User = require("../models/User");
 
 // ✅ 1️⃣ Endpoint: Tạo hoặc cập nhật hồ sơ user (đã có sẵn)
-router.post("/users/ensure", requireInternal, async (req, res) => {
+router.post("/ensure", requireInternal, async (req, res) => {
   try {
     const { authId, fullname, gender, DOB, email, avatar, phone } = req.body || {};
     if (!authId) return res.status(400).json({ message: "Missing authId" });
