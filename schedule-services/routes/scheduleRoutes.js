@@ -10,4 +10,6 @@ router.post("/prepare-schedule", ctrl.enrichScheduleBeforeCreate);
 
 router.delete("/delete/:scheduleId", requireAuth, ctrl.deleteSchedule);
 
+router.patch("/schedule/stop/:scheduleId", requireAuth, ctrl.stopSchedule);
+router.patch("/schedule/complete/:scheduleId", requireAuth, ctrl.completeSchedule);
 module.exports = router;
