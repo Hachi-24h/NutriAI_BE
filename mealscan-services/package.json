@@ -3,12 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@google-cloud/translate": "^9.3.0",
     "axios": "^1.13.2",
@@ -19,6 +15,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.20.0",
     "multer": "^2.0.2",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "openai": "^4.50.0"
   }
 }
