@@ -19,8 +19,8 @@ const setupService = (prefix, target) => {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      timeout: 300000,
-      proxyTimeout: 300000,
+      timeout: 1000000,
+      proxyTimeout: 1000000,
       keepAlive: true,
       onError: (err, req, res) => {
         console.error("Proxy error:", err);
