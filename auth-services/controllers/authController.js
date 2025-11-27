@@ -156,8 +156,8 @@ exports.loginWithGoogle = async (req, res) => {
 
       // ✅ Nếu user tồn tại nhưng chưa link Google → chặn login
       if (existed) {
-        return res.status(404).json({
-          message: "Google account not linked to any existing account. Please link your Google account first.",
+        return res.status(409).json({
+          message: "Email này đã được đăng ký trước đó. Vui lòng đăng nhập bằng phương thức ban đầu.",
         });
       }
     }
