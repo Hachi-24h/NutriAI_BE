@@ -22,18 +22,21 @@ const setupService = (prefix, target) => {
       timeout: 1000000,
       proxyTimeout: 1000000,
       keepAlive: true,
+
+      pathRewrite: (path, req) => {
+        if (path.startsWith(prefix)) {
+          return path.substring(prefix.length);
+        }
+        return path;
+      },
+
       onError: (err, req, res) => {
         console.error("Proxy error:", err);
         res.status(504).send("Gateway Timeout (Proxy)");
       },
-      pathRewrite: {
-        [`^${prefix}`]: ""
-      }
     })
   );
-}
-
-
+};
 
 // MAP SERVICES
 setupService("/auth", process.env.AUTH_SERVICE_URL);
