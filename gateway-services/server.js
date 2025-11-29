@@ -25,7 +25,9 @@ const setupService = (prefix, target) => {
 
       pathRewrite: (path, req) => {
         if (path.startsWith(prefix)) {
-          return path.substring(prefix.length);
+          let rewritten = path.replace(prefix, "");
+          if (!rewritten.startsWith("/")) rewritten = "/" + rewritten;
+          return rewritten;
         }
         return path;
       },
