@@ -8,7 +8,6 @@ app.use(cors());
 
 // LOG REQUEST
 app.use((req, res, next) => {
-  // console.log(`➡️ ${req.method} ${req.originalUrl}`);
   next();
 });
 
@@ -22,8 +21,11 @@ const setupService = (prefix, target) => {
       timeout: 300000,
       proxyTimeout: 300000,
 
-      pathRewrite: {
-        ["^" + prefix]: ""
+      pathRewrite: (path, req) => {
+        if (path.startsWith(prefix)) {
+          return path.slice(prefix.length); 
+        }
+        return path;
       },
 
       onError: (err, req, res) => {
@@ -34,10 +36,10 @@ const setupService = (prefix, target) => {
   );
 };
 
-
 // MAP SERVICES
 setupService("/auth", process.env.AUTH_SERVICE_URL);
 setupService("/user", process.env.USER_SERVICE_URL);
+setupService("/schedule-result", process.env.SCHEDULE_SERVICE_URL);
 setupService("/schedule", process.env.SCHEDULE_SERVICE_URL);
 setupService("/meal", process.env.MEAL_SERVICE_URL);
 setupService("/chatbot", process.env.CHATBOT_SERVICE_URL);

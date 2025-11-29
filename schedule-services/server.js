@@ -26,9 +26,9 @@ app.get("/schedule-result/stats", getScheduleResultStatistics);
 app.use("/stats", getScheduleStatistics);
 
 // 🧭 Main routes
-app.use("/", require("./routes/scheduleRoutes"));
-app.use("/Ai-schedule", require("./routes/AiSchedule"));
 app.use("/schedule-result", require("./routes/scheduleResultRoutes"));
+app.use("/Ai-schedule", require("./routes/AiSchedule"));
+app.use("/", require("./routes/scheduleRoutes"));
 
 // =====================
 // START SERVER
