@@ -2,11 +2,6 @@
 const Schedule = require("../models/Schedule");
 const ScheduleResult = require("../models/ScheduleResult");
 
-exports.getResultByScheduleId = (req, res) => {
-  console.log("🔥 /by-schedule hit");
-  console.log("Body:", req.body);
-};
-
 // 🧾 Gửi form đánh giá sau khi hoàn thành lịch
 const submitScheduleResult = async (req, res) => {
   try {
