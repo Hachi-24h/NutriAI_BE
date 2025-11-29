@@ -19,17 +19,11 @@ const setupService = (prefix, target) => {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      timeout: 1000000,
-      proxyTimeout: 1000000,
-      keepAlive: true,
+      timeout: 300000,
+      proxyTimeout: 300000,
 
-      pathRewrite: (path, req) => {
-        if (path.startsWith(prefix)) {
-          let rewritten = path.replace(prefix, "");
-          if (!rewritten.startsWith("/")) rewritten = "/" + rewritten;
-          return rewritten;
-        }
-        return path;
+      pathRewrite: {
+        ["^" + prefix]: ""
       },
 
       onError: (err, req, res) => {
@@ -39,6 +33,7 @@ const setupService = (prefix, target) => {
     })
   );
 };
+
 
 // MAP SERVICES
 setupService("/auth", process.env.AUTH_SERVICE_URL);
