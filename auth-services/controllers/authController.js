@@ -487,11 +487,13 @@ exports.linkGoogle = async (req, res) => {
     if (alreadyLinked) {
       return res.status(400).json({ message: "Google account already linked" });
     }
-
-    if (auth.email && auth.email !== email) {
-      return res.status(400).json({
-        message: "Google email must match your registered email"
-      });
+    const dbEmail = (auth.email || "").trim().toLowerCase().normalize();
+    const googleEmail = (email || "").trim().toLowerCase().normalize();
+    
+    if (dbEmail !== googleEmail) {
+      console.log("DB:", JSON.stringify(dbEmail));
+      console.log("GG:", JSON.stringify(googleEmail));
+      return res.status(400).json({ message: "Google email must match your registered email" });
     }
 
     auth.providers.push({ type: "google", providerId: sub });
