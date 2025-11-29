@@ -39,7 +39,6 @@ const setupService = (prefix, target) => {
 // MAP SERVICES
 setupService("/auth", process.env.AUTH_SERVICE_URL);
 setupService("/user", process.env.USER_SERVICE_URL);
-setupService("/schedule-result", process.env.SCHEDULE_SERVICE_URL);
 setupService("/schedule", process.env.SCHEDULE_SERVICE_URL);
 setupService("/meal", process.env.MEAL_SERVICE_URL);
 setupService("/chatbot", process.env.CHATBOT_SERVICE_URL);
