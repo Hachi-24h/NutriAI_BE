@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(requestLogger("ChatBot-service"));
-app.use("/chatbot", chatbotRoutes);
+app.use("/", chatbotRoutes);
 
 const PORT = process.env.CHATBOT_PORT;
 app.listen(PORT, () => console.log(`🤖 ChatBot service running on port ${PORT}`));
