@@ -489,7 +489,7 @@ exports.linkGoogle = async (req, res) => {
     }
     const dbEmail = (auth.email || "").trim().toLowerCase().normalize();
     const googleEmail = (email || "").trim().toLowerCase().normalize();
-    
+
     if (dbEmail !== googleEmail) {
       console.log("DB:", JSON.stringify(dbEmail));
       console.log("GG:", JSON.stringify(googleEmail));
@@ -823,8 +823,8 @@ exports.requestUnlink = async (req, res) => {
         return res.status(400).json({ message: "Phone not linked" });
       }
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await OtpCode.deleteMany({ phone: auth.phone });
-      await OtpCode.create({ phone: auth.phone, code });
+      await OtpCode.deleteMany({ userId: auth._id });
+      await OtpCode.create({ userId: auth._id, code });
 
       // TODO: gửi SMS qua service (Twilio / Viettel / Zalo…)
       console.log(`Send SMS to ${auth.phone}: code ${code}`);
@@ -864,7 +864,7 @@ exports.confirmUnlink = async (req, res) => {
     }
 
     if (type === "google") {
-      const record = await OtpCode.findOne({ phone: auth.phone, code });
+      const record = await OtpCode.findOne({ userId: auth._id, code });
       if (!record) return res.status(400).json({ message: "Invalid/expired code" });
 
       if (auth.providers.length <= 1)
