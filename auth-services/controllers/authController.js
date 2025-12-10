@@ -874,7 +874,7 @@ exports.confirmUnlink = async (req, res) => {
       auth.providers = auth.providers.filter(p => p.type !== "google");
       await auth.save();
 
-      await OtpCode.deleteMany({ phone: auth.phone });
+      await OtpCode.deleteMany({ userId: auth._id });
       return res.json({ success: true, message: "Google unlinked successfully" });
     }
 
