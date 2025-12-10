@@ -823,8 +823,8 @@ exports.requestUnlink = async (req, res) => {
         return res.status(400).json({ message: "Phone not linked" });
       }
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await OtpCode.deleteMany({ userId: auth._id });
-      await OtpCode.create({ userId: auth._id, code });
+      await OtpCode.deleteMany({ phone: auth.phone });
+      await OtpCode.create({ phone: auth.phone, code });
 
       // TODO: gửi SMS qua service (Twilio / Viettel / Zalo…)
       console.log(`Send SMS to ${auth.phone}: code ${code}`);
@@ -864,7 +864,7 @@ exports.confirmUnlink = async (req, res) => {
     }
 
     if (type === "google") {
-      const record = await OtpCode.findOne({ userId: auth._id, code });
+      const record = await OtpCode.findOne({ phone: auth.phone, code });
       if (!record) return res.status(400).json({ message: "Invalid/expired code" });
 
       if (auth.providers.length <= 1)
