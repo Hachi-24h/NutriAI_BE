@@ -65,6 +65,7 @@ Yêu cầu:
 - Mỗi ngày có ${cleanUser.mealsPerDay} bữa tương ứng với khung giờ trên.
 - Các bữa sáng/trưa/tối là bữa chính, món ăn phải đủ năng lượng và đa dạng.
 - Mỗi ngày ${cleanUser.mealsPerDay} bữa, tổng calo xấp xỉ ${nutritionNeeds.calories} kcal/ngày.
+- đảm bảo mỗi bữa phải đủ lượng cao xếp sỉ ${nutritionNeeds.calories} kcal/ngày, ko đủ phải thêm món , và các ngày phải khác nhau.và đa dạng món ăn giữa các ngày.
 - Mỗi bữa phải có đủ 4 chỉ số [Calories, Protein, Fat, Carbs] và lưu trong mảng “CPFCa” theo đúng thứ tự [calo, protein, fat, carbs].
 - Phân bổ macro theo tỉ lệ: sáng 25%, trưa 40%, tối 35%.
 `;
