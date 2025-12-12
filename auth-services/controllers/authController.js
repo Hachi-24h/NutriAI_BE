@@ -741,7 +741,11 @@ exports.sendEmailVerification = async (req, res) => {
       email: email.toLowerCase(),
       purpose: "VERIFY_EMAIL"
     });
-    await OtpCode.create({ email: email.toLowerCase(), code });
+    await OtpCode.create({
+      email: email.toLowerCase(),
+      code,
+      purpose: "VERIFY_EMAIL"
+    });
 
     // gửi email
     const transporter = nodemailer.createTransport({
@@ -774,7 +778,11 @@ exports.verifyEmail = async (req, res) => {
     if (!email || !code)
       return res.status(400).json({ message: "Missing email/code" });
 
-    const record = await OtpCode.findOne({ email: email.toLowerCase(), code });
+    const record = await OtpCode.findOne({
+      email: email.toLowerCase(),
+      code,
+      purpose: "VERIFY_EMAIL"
+    });
     if (!record)
       return res.status(400).json({ success: false, message: "Invalid or expired code" });
 
@@ -941,7 +949,11 @@ exports.requestUnlink = async (req, res) => {
         email: auth.email,
         purpose: "UNLINK_PHONE"
       });
-      await OtpCode.create({ email: auth.email, code });
+      await OtpCode.create({
+        email: auth.email,
+        code,
+        purpose: "UNLINK_PHONE"
+      });
 
       // gửi email
       const transporter = nodemailer.createTransport({
@@ -965,7 +977,11 @@ exports.requestUnlink = async (req, res) => {
       }
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       await OtpCode.deleteMany({ phone: auth.phone });
-      await OtpCode.create({ phone: auth.phone, code });
+      await OtpCode.create({
+        phone: auth.phone,
+        code,
+        purpose: "UNLINK_GOOGLE"
+      });
 
       // TODO: gửi SMS qua service (Twilio / Viettel / Zalo…)
       console.log(`Send SMS to ${auth.phone}: code ${code}`);
@@ -988,7 +1004,11 @@ exports.confirmUnlink = async (req, res) => {
 
     if (type === "phone") {
       // verify code qua email
-      const record = await OtpCode.findOne({ email: auth.email, code });
+      const record = await OtpCode.findOne({
+        email: auth.email,
+        code,
+        purpose: "UNLINK_PHONE"
+      });
       if (!record) return res.status(400).json({ message: "Invalid/expired code" });
 
       if (auth.providers.length <= 1)
@@ -1005,7 +1025,11 @@ exports.confirmUnlink = async (req, res) => {
     }
 
     if (type === "google") {
-      const record = await OtpCode.findOne({ phone: auth.phone, code });
+      const record = await OtpCode.findOne({
+        phone: auth.phone,
+        code,
+        purpose: "UNLINK_GOOGLE"
+      });
       if (!record) return res.status(400).json({ message: "Invalid/expired code" });
 
       if (auth.providers.length <= 1)
