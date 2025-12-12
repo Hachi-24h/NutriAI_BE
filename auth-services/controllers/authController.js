@@ -56,23 +56,71 @@ async function saveRefreshToken(authId, refreshRaw) {
 }
 
 // ====== ĐĂNG KÝ ======
+// exports.register = async (req, res) => {
+//   try {
+//     const { phone, email, password } = req.body || {};
+//     if (!phone || !password) return res.status(400).json({ message: "Missing phone/password" });
+
+//     const existed = await Auth.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
+//     if (existed) return res.status(409).json({ message: "Phone/Email already exists" });
+
+
+//     const passwordHash = await bcrypt.hash(password, 12);
+//     const auth = await Auth.create({
+//       phone: phone.trim(),
+//       email: email ? email.toLowerCase().trim() : email,
+//       providers: [{ type: 'local', passwordHash }],
+//       biometric: false // 👈 thêm dòng này
+//     });
+
+//     const access_token = signAccessToken(auth);
+//     const refresh_token = signRefreshToken(auth);
+//     await saveRefreshToken(auth._id, refresh_token);
+
+//     res.status(201).json({
+//       access_token,
+//       refresh_token,
+//       token_type: "Bearer",
+//       expires_in: 900
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: "Register failed", error: err.message });
+//   }
+// };
+
 exports.register = async (req, res) => {
   try {
-    const { phone, email, password } = req.body || {};
-    if (!phone || !password) return res.status(400).json({ message: "Missing phone/password" });
+    const {
+      phone,
+      email,
+      password,
+      fullname,
+      DOB,
+      gender,
+      height,
+      weight,
+    } = req.body || {};
 
-    const existed = await Auth.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
-    if (existed) return res.status(409).json({ message: "Phone/Email already exists" });
+    if (!phone || !password || !fullname) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
+    const existed = await Auth.findOne({
+      $or: [{ phone }, ...(email ? [{ email }] : [])],
+    });
+    if (existed)
+      return res.status(409).json({ message: "Phone/Email already exists" });
 
     const passwordHash = await bcrypt.hash(password, 12);
+
     const auth = await Auth.create({
       phone: phone.trim(),
-      email: email ? email.toLowerCase().trim() : email,
-      providers: [{ type: 'local', passwordHash }],
-      biometric: false // 👈 thêm dòng này
+      email: email ? email.toLowerCase().trim() : null,
+      providers: [{ type: "local", passwordHash }],
+      biometric: false,
     });
 
+    // ✅ QUAN TRỌNG: tạo user profile
     await ensureUserProfile(auth._id.toString(), {
       fullname,
       phone,
@@ -87,14 +135,17 @@ exports.register = async (req, res) => {
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
 
-    res.status(201).json({
+    return res.status(201).json({
       access_token,
       refresh_token,
       token_type: "Bearer",
-      expires_in: 900
+      expires_in: 900,
     });
   } catch (err) {
-    res.status(500).json({ message: "Register failed", error: err.message });
+    console.error("Register error:", err);
+    return res
+      .status(500)
+      .json({ message: "Register failed", error: err.message });
   }
 };
 
