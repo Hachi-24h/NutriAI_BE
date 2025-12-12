@@ -18,6 +18,8 @@ router.post("/check-credentials", authCtrl.checkCredentials);
 router.post("/link-google", requireAuth, authCtrl.linkGoogle);
 router.post("/unlink-google", requireAuth, authCtrl.unlinkGoogle);
 router.post("/link-phone", requireAuth, authCtrl.linkPhone);
+router.post("/confirm-link-phone",requireAuth,authCtrl.confirmLinkPhone);
+
 router.post("/unlink-phone", requireAuth, authCtrl.unlinkPhone);
 
 router.post("/change-password-email", authCtrl.resetPasswordByEmail);

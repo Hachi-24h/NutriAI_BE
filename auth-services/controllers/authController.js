@@ -557,6 +557,56 @@ exports.linkPhone = async (req, res) => {
   }
 };
 
+exports.confirmLinkPhone = async (req, res) => {
+  try {
+    const { code } = req.body;
+    const auth = await Auth.findById(req.auth.id);
+
+    if (!auth) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔍 tìm OTP theo email
+    const record = await OtpCode.findOne({
+      email: auth.email,
+      code
+    });
+
+    if (!record) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // ❌ không cho link nếu đã có local
+    const hasLocal = auth.providers.some(p => p.type === "local");
+    if (hasLocal) {
+      return res.status(400).json({ message: "Phone already linked" });
+    }
+
+    // ✅ LINK THẬT
+    auth.phone = record.meta.phone;
+    auth.providers.push({
+      type: "local",
+      passwordHash: record.meta.passwordHash
+    });
+
+    await auth.save();
+
+    // 🧹 xoá OTP
+    await OtpCode.deleteMany({ email: auth.email });
+
+    return res.json({
+      success: true,
+      message: "Phone linked successfully"
+    });
+  } catch (err) {
+    console.error("confirmLinkPhone error:", err);
+    return res.status(500).json({
+      message: "Confirm link phone failed",
+      error: err.message
+    });
+  }
+};
+
 exports.unlinkGoogle = async (req, res) => {
   try {
     const auth = await Auth.findById(req.auth.id);
