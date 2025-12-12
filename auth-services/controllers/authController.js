@@ -657,7 +657,10 @@ exports.confirmLinkPhone = async (req, res) => {
     await auth.save();
 
     // 🧹 clear OTP
-    await OtpCode.deleteMany({ email: auth.email });
+    await OtpCode.deleteMany({
+      email: auth.email,
+      purpose: "LINK_PHONE"
+    });
 
     return res.json({
       success: true,
