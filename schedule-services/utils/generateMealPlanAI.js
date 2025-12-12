@@ -71,7 +71,7 @@ Yêu cầu:
 
     // 🚀 Gọi AI
     const response = await client.chat.completions.create({
-      model: "gpt-5-mini",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt.trim() },
         { role: "user", content: userPrompt.trim() },
