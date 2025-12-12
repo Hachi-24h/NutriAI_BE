@@ -509,38 +509,51 @@ exports.linkGoogle = async (req, res) => {
 exports.linkPhone = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    if (!phone || !password) {
-      return res.status(400).json({ message: "Missing phone or password" });
-    }
 
-    // 1. Check phone đã tồn tại ở user khác chưa
-    const existing = await Auth.findOne({ phone });
-    if (existing) {
-      return res.status(400).json({ message: "Phone number already in use" });
-    }
-
-    // 2. Lấy user hiện tại từ access token
     const auth = await Auth.findById(req.auth.id);
     if (!auth) return res.status(404).json({ message: "User not found" });
 
-    // 3. Kiểm tra đã có local provider chưa
-    const hasLocal = auth.providers.some(p => p.type === "local");
-    if (hasLocal) {
-      return res.status(400).json({ message: "Local account already linked" });
+    // check phone trùng
+    if (await Auth.findOne({ phone })) {
+      return res.status(400).json({ message: "Phone already in use" });
     }
 
-    // 4. Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // 👉 TẠO OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 5. Cập nhật user: thêm phone + provider local
-    auth.phone = phone;
-    auth.providers.push({ type: "local", passwordHash });
-    await auth.save();
+    await OtpCode.deleteMany({ email: auth.email });
+    await OtpCode.create({
+      email: auth.email,
+      code,
+      meta: {
+        phone,
+        passwordHash: await bcrypt.hash(password, 12)
+      }
+    });
 
-    return res.json({ message: "Local account linked successfully" });
+    // 👉 GỬI EMAIL
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"NutriAI" <${process.env.SMTP_USER}>`,
+      to: auth.email,
+      subject: "Confirm link phone",
+      text: `Your OTP code is: ${code}`,
+    });
+
+    return res.json({
+      success: true,
+      message: "OTP sent to email"
+    });
   } catch (err) {
-    console.error("Link Local error:", err.message);
-    return res.status(500).json({ message: "Link Local failed", error: err.message });
+    console.error(err);
+    return res.status(500).json({ message: "Link phone failed" });
   }
 };
 
