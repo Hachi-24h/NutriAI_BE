@@ -73,6 +73,16 @@ exports.register = async (req, res) => {
       biometric: false // 👈 thêm dòng này
     });
 
+    await ensureUserProfile(auth._id.toString(), {
+      fullname,
+      phone,
+      email,
+      DOB,
+      gender,
+      height,
+      weight,
+    });
+
     const access_token = signAccessToken(auth);
     const refresh_token = signRefreshToken(auth);
     await saveRefreshToken(auth._id, refresh_token);
@@ -169,7 +179,6 @@ exports.loginWithGoogle = async (req, res) => {
         emailVerified: true,
         providers: [{ type: "google", providerId: sub }],
         email,
-        providers: [{ type: 'google', providerId: sub }],
         biometric: false // 👈 thêm dòng này
       });
       console.log("🆕 Created new Google user:", email);
