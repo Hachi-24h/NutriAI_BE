@@ -581,7 +581,10 @@ exports.linkPhone = async (req, res) => {
     // 👉 TẠO OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await OtpCode.deleteMany({ email: auth.email });
+    await OtpCode.deleteMany({
+      email: auth.email,
+      purpose: "LINK_PHONE"
+    });
     await OtpCode.create({
       email: auth.email,
       code,
@@ -731,7 +734,10 @@ exports.sendEmailVerification = async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     // lưu vào DB, xóa code cũ nếu có
-    await OtpCode.deleteMany({ email: email.toLowerCase() });
+    await OtpCode.deleteMany({
+      email: email.toLowerCase(),
+      purpose: "VERIFY_EMAIL"
+    });
     await OtpCode.create({ email: email.toLowerCase(), code });
 
     // gửi email
@@ -925,7 +931,10 @@ exports.requestUnlink = async (req, res) => {
         return res.status(400).json({ message: "Google not linked" });
       }
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await OtpCode.deleteMany({ email: auth.email });
+      await OtpCode.deleteMany({
+        email: auth.email,
+        purpose: "UNLINK_PHONE"
+      });
       await OtpCode.create({ email: auth.email, code });
 
       // gửi email
