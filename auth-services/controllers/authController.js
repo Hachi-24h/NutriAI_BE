@@ -525,6 +525,7 @@ exports.linkPhone = async (req, res) => {
     await OtpCode.create({
       email: auth.email,
       code,
+      purpose: "LINK_PHONE",
       meta: {
         phone,
         passwordHash: await bcrypt.hash(password, 12)
@@ -560,38 +561,39 @@ exports.linkPhone = async (req, res) => {
 exports.confirmLinkPhone = async (req, res) => {
   try {
     const { code } = req.body;
-    const auth = await Auth.findById(req.auth.id);
 
+    const auth = await Auth.findById(req.auth.id);
     if (!auth) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🔍 tìm OTP theo email
-    const record = await OtpCode.findOne({
+    // 🔥 CHỐT: tìm OTP theo email + code
+    const otp = await OtpCode.findOne({
       email: auth.email,
-      code
+      code,
+      purpose: "LINK_PHONE"
     });
-
-    if (!record) {
+    
+    if (!otp) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
+    
 
-    // ❌ không cho link nếu đã có local
-    const hasLocal = auth.providers.some(p => p.type === "local");
-    if (hasLocal) {
+    // 🚫 check phone trùng lần nữa (an toàn)
+    if (await Auth.findOne({ phone: otp.meta.phone })) {
       return res.status(400).json({ message: "Phone already linked" });
     }
 
     // ✅ LINK THẬT
-    auth.phone = record.meta.phone;
+    auth.phone = otp.meta.phone;
     auth.providers.push({
       type: "local",
-      passwordHash: record.meta.passwordHash
+      passwordHash: otp.meta.passwordHash
     });
 
     await auth.save();
 
-    // 🧹 xoá OTP
+    // 🧹 clear OTP
     await OtpCode.deleteMany({ email: auth.email });
 
     return res.json({
@@ -599,13 +601,14 @@ exports.confirmLinkPhone = async (req, res) => {
       message: "Phone linked successfully"
     });
   } catch (err) {
-    console.error("confirmLinkPhone error:", err);
+    console.error(err);
     return res.status(500).json({
       message: "Confirm link phone failed",
       error: err.message
     });
   }
 };
+
 
 exports.unlinkGoogle = async (req, res) => {
   try {
