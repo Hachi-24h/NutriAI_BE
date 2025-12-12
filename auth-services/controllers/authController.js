@@ -782,7 +782,10 @@ exports.verifyEmail = async (req, res) => {
     );
 
     // Xoá code sau khi dùng
-    await OtpCode.deleteMany({ email: email.toLowerCase() });
+    await OtpCode.deleteMany({
+      email: email.toLowerCase(),
+      purpose: "VERIFY_EMAIL"
+    });    
 
     // ✅ cập nhật user: set emailVerified = true
     const auth = await Auth.findOneAndUpdate(
