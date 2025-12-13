@@ -37,7 +37,7 @@ function sha256(s) {
 }
 function signAccessToken(auth) {
   return jwt.sign(
-    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified },
+    { sub: auth._id.toString(), phone: auth.phone, email: auth.email, role: auth.role, emailVerified: auth.emailVerified, isSuperAdmin: auth.isSuperAdmin === true || auth.isSuperAdmin === "true" },
     JWT_ACCESS_SECRET,
     { expiresIn: ACCESS_TTL, issuer: "auth-service" }
   );
@@ -186,8 +186,16 @@ exports.login = async (req, res) => {
       access_token,
       refresh_token,
       token_type: "Bearer",
-      expires_in: 900
-    });
+      expires_in: 900,
+      user: {
+        id: auth._id,
+        email: auth.email,
+        phone: auth.phone,
+        role: auth.role,
+        emailVerified: auth.emailVerified,
+        isSuperAdmin: auth.isSuperAdmin === true || auth.isSuperAdmin === "true"
+      }
+    });    
   } catch (err) {
     return res.status(500).json({ message: "Login failed", error: err.message });
   }
@@ -254,7 +262,15 @@ exports.loginWithGoogle = async (req, res) => {
       refresh_token,
       token_type: "Bearer",
       expires_in: 900,
-    });
+      user: {
+        id: auth._id,
+        email: auth.email,
+        phone: auth.phone,
+        role: auth.role,
+        emailVerified: auth.emailVerified,
+        isSuperAdmin: auth.isSuperAdmin === true || auth.isSuperAdmin === "true"
+      }
+    });    
   } catch (err) {
     console.error("Google login error:", err?.message);
     return res.status(401).json({
@@ -344,6 +360,7 @@ exports.getMe = async (req, res) => {
       emailVerified: auth.emailVerified,
       providers: auth.providers,
       biometric: auth.biometric,
+      isSuperAdmin: auth.isSuperAdmin === true || auth.isSuperAdmin === "true"
     });
   } catch (err) {
     return res.status(500).json({ message: "Get me failed", error: err.message });
