@@ -298,6 +298,4 @@
 { "name": "Pizza hải sản", "calories": 300, "protein": 14, "fat": 11, "carbs": 36, "unit": "1 miếng 150g" },
 { "name": "Bánh mì chảo", "calories": 550, "protein": 30, "fat": 25, "carbs": 50, "unit": "1 phần 400g" },
 { "name": "Lẩu kim chi", "calories": 480, "protein": 25, "fat": 18, "carbs": 50, "unit": "1 phần 600g" }
-
-
 ]
