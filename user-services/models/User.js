@@ -9,7 +9,8 @@ const UserSchema = new mongoose.Schema({
   weight: { type: String },
   BMI: { type: String },
   activityLevel: { type: Number },
-  avt: { type: String } // 👈 thêm trường avatar
+  avt: { type: String } ,// 👈 thêm trường avatar
+  medicalConditions: { type: [String] , default: [] },
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", UserSchema);
