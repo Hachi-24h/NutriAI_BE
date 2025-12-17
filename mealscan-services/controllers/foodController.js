@@ -120,36 +120,36 @@ exports.analyzeFoodsBatch = async (req, res) => {
 
     // 3️⃣ PROMPT BATCH
     const prompt = `
-You are a clinical nutrition assistant.
-
-User medical conditions:
-${medicalConditions.join(", ")}
-
-Analyze the following foods.
-
-Return JSON ONLY as array:
-[
-  {
-    "foodName": string,
-    "isSafe": boolean,
-    "riskLevel": "LOW" | "MEDIUM" | "HIGH",
-    "reason": string
-  }
-]
-
-Foods:
-${foodsToAnalyze
-  .map(
-    (f) => `
-Food: ${f.food.name}
-Calories: ${f.food.nutrition.calories}
-Protein: ${f.food.nutrition.protein}
-Carbs: ${f.food.nutrition.carbs}
-Fat: ${f.food.nutrition.fat}
-`
-  )
-  .join("\n")}
-`;
+    You are a clinical nutrition assistant.
+    
+    IMPORTANT:
+    - Return ONLY valid JSON
+    - No explanation
+    - No markdown
+    - No extra text
+    
+    JSON format:
+    [
+      {
+        "foodName": string,
+        "isSafe": boolean,
+        "riskLevel": "LOW" | "MEDIUM" | "HIGH",
+        "reason": string
+      }
+    ]
+    
+    User medical conditions:
+    ${medicalConditions.join(", ")}
+    
+    Foods:
+    ${foodsToAnalyze.map(f => `
+    Food name: ${f.food.name}
+    Calories: ${f.food.nutrition.calories}
+    Protein: ${f.food.nutrition.protein}
+    Carbs: ${f.food.nutrition.carbs}
+    Fat: ${f.food.nutrition.fat}
+    `).join("\n")}
+    `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
