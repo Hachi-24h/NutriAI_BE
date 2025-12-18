@@ -7,5 +7,6 @@ router.get("/detail", foodController.getFoodDetail);
 router.get("/featured", foodController.getFeaturedFoods);
 router.get("/random", foodController.getRandomFoods);
 router.post("/foods-analyze-batch", foodController.analyzeFoodsBatch);
+router.get("/listSave/:userId", foodController.getSavedMealsByUser);
 
 module.exports = router;
