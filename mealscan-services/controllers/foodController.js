@@ -1,4 +1,5 @@
 const NodeCache = require("node-cache");
+const ScannedMeal = require("../models/scannedMeal");
 const { searchFoods, getFoodDetail, getFeaturedFoods } = require("../services/localFoodService");
 const OpenAI = require("openai");
 
@@ -172,5 +173,25 @@ exports.analyzeFoodsBatch = async (req, res) => {
   } catch (e) {
     console.error("AI batch error:", e.message);
     res.status(500).json({ message: "AI batch analyze failed" });
+  }
+};
+
+exports.getSavedMealsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "Missing userId" });
+    }
+
+    const meals = await ScannedMeal.find(
+      { userId },
+      { food_en: 1, _id: 0 } // chỉ lấy tên món
+    ).lean();
+
+    res.json(meals);
+  } catch (error) {
+    console.error("❌ getSavedMealsByUser error:", error.message);
+    res.status(500).json({ message: "Failed to fetch saved meals" });
   }
 };
