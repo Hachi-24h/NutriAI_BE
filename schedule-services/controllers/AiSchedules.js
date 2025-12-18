@@ -3,6 +3,7 @@ const { parseUserInfo } = require("../utils/parseUserInfo");
 const { getNutritionAI } = require("../utils/getNutritionAI");
 const { generateMealPlanAI } = require("../utils/generateMealPlanAI");
 const { analyzeUserScheduleAI } = require("../utils/analyzeUserScheduleAI.cjs");
+const {analyzeMealPlanForDiseaseAI} = require("../utils/anlyzeMedicalAI.cjs");
 
 /**
  * ✅ Bước 1 — chỉ tính nutrition (AI phân tích mục tiêu + thời gian + bệnh lý)
@@ -84,5 +85,40 @@ const getAiAdvice = async (req, res) => {
     res.status(500).json({ message: err.message || "AI không thể đưa lời khuyên" });
   }
 };
+/**
+ * ✅ Bước 4 — Kiểm tra món ăn có phù hợp với bệnh lý không
+ */
+const checkMealForDisease = async (req, res) => {
+  try {
+    const { diseases, durationDays, mealPlan } = req.body;
 
-module.exports = { generateNutrition, generateMealPlan, generatePlan2Step ,getAiAdvice};
+    // ===== VALIDATION =====
+    if (
+      !Array.isArray(diseases) ||
+      typeof durationDays !== "number" ||
+      !Array.isArray(mealPlan)
+    ) {
+      return res.status(400).json({
+        message: "Body phải gồm diseases[], durationDays, mealPlan[]",
+      });
+    }
+
+    const result = await analyzeMealPlanForDiseaseAI({
+      diseases,
+      durationDays,
+      mealPlan,
+    });
+
+    return res.json({
+      step: "meal-plan-disease-check",
+      ...result,
+    });
+  } catch (err) {
+    console.error("❌ Error /check-meal-plan-disease:", err);
+    return res.status(500).json({
+      message: err.message || "AI không thể phân tích thực đơn",
+    });
+  }
+};
+
+module.exports = { generateNutrition, generateMealPlan, generatePlan2Step ,getAiAdvice , checkMealForDisease};
